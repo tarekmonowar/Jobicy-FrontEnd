@@ -1,4 +1,8 @@
 import Image from "next/image";
+import { ALIAS_CHECK } from "@/alias-check";
+
+// Phase 0: touch alias import so @/* resolves at build time
+void ALIAS_CHECK;
 
 export default function Home() {
   return (
