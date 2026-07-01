@@ -60,10 +60,39 @@ export function getApiErrorMessage(
   error: unknown,
   fallback = 'Something went wrong',
 ): string {
-  if (isAxiosError<ApiError>(error) && error.response?.data?.error?.message) {
-    return error.response.data.error.message;
+  if (isAxiosError<ApiError>(error)) {
+    if (!error.response) {
+      if (error.code === 'ECONNABORTED') {
+        return 'Request timed out. Check that the backend is running on port 4000.';
+      }
+      return 'Cannot reach the server. Make sure the backend is running (npm run start:dev in backend/).';
+    }
+    const apiErr = error.response.data?.error;
+    if (apiErr) {
+      const { code, message } = apiErr;
+      if (code === 'EMAIL_NOT_VERIFIED') {
+        return 'Please verify your email first. Check your inbox (and spam) for the verification link.';
+      }
+      if (code === 'EMAIL_IN_USE') {
+        return 'This email is already registered. Sign in or use a different email.';
+      }
+      if (code === 'INVALID_CREDENTIALS') {
+        return 'Incorrect email or password. Please try again.';
+      }
+      return message || fallback;
+    }
   }
   return fallback;
+}
+
+/** Show the first form validation error as a toast (used on failed submit). */
+export function toastFormErrors(errors: Record<string, { message?: string }>): void {
+  const first = Object.values(errors).find((e) => e?.message);
+  if (first?.message) {
+    toast.error(first.message);
+  } else {
+    toast.error('Please fix the highlighted fields');
+  }
 }
 
 /**
@@ -82,20 +111,20 @@ export function useAuth() {
 
   const loginMutation = useMutation({
     mutationFn: (payload: LoginPayload) => authApi.login(payload),
-    onError: (error) => {
-      toast.error(getApiErrorMessage(error, 'Login failed'));
-    },
   });
 
   const registerMutation = useMutation({
     mutationFn: (payload: RegisterPayload) => authApi.register(payload),
-    onError: (error) => {
-      toast.error(getApiErrorMessage(error, 'Registration failed'));
+    onSuccess: (_data, variables) => {
+      toast.success(`Verification email sent to ${variables.email}`);
     },
   });
 
   const forgotPasswordMutation = useMutation({
     mutationFn: (email: string) => authApi.forgotPassword(email),
+    onSuccess: (_data, email) => {
+      toast.success(`If an account exists, we sent a reset link to ${email}`);
+    },
     onError: (error) => {
       toast.error(getApiErrorMessage(error, 'Could not send reset email'));
     },
@@ -104,6 +133,9 @@ export function useAuth() {
   const resetPasswordMutation = useMutation({
     mutationFn: ({ token, password }: { token: string; password: string }) =>
       authApi.resetPassword(token, password),
+    onSuccess: () => {
+      toast.success('Password updated! You can sign in now.');
+    },
     onError: (error) => {
       toast.error(getApiErrorMessage(error, 'Could not reset password'));
     },
@@ -111,6 +143,9 @@ export function useAuth() {
 
   const verifyEmailMutation = useMutation({
     mutationFn: (token: string) => authApi.verifyEmail(token),
+    onSuccess: () => {
+      toast.success('Email verified! You can sign in now.');
+    },
     onError: (error) => {
       toast.error(getApiErrorMessage(error, 'Email verification failed'));
     },

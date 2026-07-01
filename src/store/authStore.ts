@@ -4,6 +4,9 @@ import { create } from 'zustand';
 import * as authApi from '@/lib/api/authApi';
 import type { UserDto } from '@/types/auth';
 
+/** Max wait for silent refresh on app load — never leave status stuck on idle. */
+const BOOTSTRAP_TIMEOUT_MS = 6_000;
+
 type AuthStore = {
   accessToken: string | null;
   user: UserDto | null;
@@ -45,15 +48,22 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   /**
    * Bootstrap session on app load: refresh cookie → access token → fetch /me.
-   * Sets status to 'authed' or 'guest' when complete.
+   * Always ends as authed or guest (never stuck on idle).
    */
   bootstrap: async () => {
-    try {
+    const run = async () => {
       const { accessToken } = await authApi.refresh();
       set({ accessToken });
-
       const { user } = await authApi.me();
       set({ user, accessToken, status: 'authed' });
+    };
+
+    const timeout = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('Auth bootstrap timed out')), BOOTSTRAP_TIMEOUT_MS);
+    });
+
+    try {
+      await Promise.race([run(), timeout]);
     } catch {
       set({ accessToken: null, user: null, status: 'guest' });
     }

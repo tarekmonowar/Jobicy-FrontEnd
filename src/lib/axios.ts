@@ -45,6 +45,7 @@ async function refreshAccessToken(): Promise<string> {
 export const api: AxiosInstance = axios.create({
   baseURL: env.apiUrl,
   withCredentials: true,
+  timeout: 15_000,
   headers: { 'Content-Type': 'application/json' },
 });
 

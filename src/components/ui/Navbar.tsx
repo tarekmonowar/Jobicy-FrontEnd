@@ -5,7 +5,8 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
-import { Menu, X, User, LogOut, Briefcase, Bookmark, Bell, Shield } from 'lucide-react';
+import { Menu, X, User, LogOut, Briefcase, Bookmark, Bell, Shield, LogIn } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -34,23 +35,30 @@ export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, status, logout } = useAuthStore();
   const isAuthed = status === 'authed' && user !== null;
+  const isGuest = !isAuthed;
 
   const visibleLinks = NAV_LINKS.filter((link) => !link.auth || isAuthed);
 
-  const handleLogout = () => {
-    void logout();
+  const handleLogout = async () => {
+    await logout();
+    toast.success('Signed out successfully');
     setMobileOpen(false);
   };
 
+  const signInHref =
+    pathname && pathname !== '/login'
+      ? `/login?next=${encodeURIComponent(pathname)}`
+      : '/login';
+
   return (
     <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
-        <Link href="/" className="text-lg font-bold text-primary">
+      <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-4 sm:px-6">
+        <Link href="/" className="shrink-0 text-lg font-bold text-primary">
           {env.appName}
         </Link>
 
-        {/* Desktop nav */}
-        <nav className="hidden items-center gap-1 md:flex">
+        {/* Desktop nav — center area */}
+        <nav className="hidden flex-1 items-center gap-1 md:flex">
           {visibleLinks.map((link) => (
             <Link
               key={link.href}
@@ -67,11 +75,12 @@ export function Navbar() {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-2 md:flex">
+        {/* Right side — always pinned to the end */}
+        <div className="ml-auto flex items-center gap-2">
           {isAuthed ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2">
+                <Button variant="outline" size="sm" className="hidden gap-2 md:inline-flex">
                   <User className="size-4" />
                   <span className="max-w-[120px] truncate">{user.name}</span>
                 </Button>
@@ -116,28 +125,34 @@ export function Navbar() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          ) : status !== 'idle' ? (
+          ) : isGuest ? (
             <>
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/login">Login</Link>
+              <Button variant="ghost" size="sm" className="hidden sm:inline-flex" asChild>
+                <Link href={signInHref}>Sign in</Link>
               </Button>
-              <Button size="sm" asChild>
+              <Button size="sm" className="hidden sm:inline-flex" asChild>
                 <Link href="/register">Register</Link>
+              </Button>
+              {/* Compact sign-in on small screens (visible next to menu icon) */}
+              <Button size="sm" className="sm:hidden" asChild>
+                <Link href={signInHref}>
+                  <LogIn className="size-4" />
+                  Sign in
+                </Link>
               </Button>
             </>
           ) : null}
-        </div>
 
-        {/* Mobile menu toggle */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="md:hidden"
-          onClick={() => setMobileOpen((o) => !o)}
-          aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
-        >
-          {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
-        </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            onClick={() => setMobileOpen((o) => !o)}
+            aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+          >
+            {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+          </Button>
+        </div>
       </div>
 
       {/* Mobile drawer */}
@@ -189,11 +204,11 @@ export function Navbar() {
                     Logout
                   </Button>
                 </>
-              ) : status !== 'idle' ? (
+              ) : isGuest ? (
                 <>
                   <Button variant="outline" size="sm" asChild>
-                    <Link href="/login" onClick={() => setMobileOpen(false)}>
-                      Login
+                    <Link href={signInHref} onClick={() => setMobileOpen(false)}>
+                      Sign in
                     </Link>
                   </Button>
                   <Button size="sm" asChild>

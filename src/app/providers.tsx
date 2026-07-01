@@ -25,7 +25,11 @@ export function Providers({ children }: ProvidersProps) {
 
   useEffect(() => {
     void bootstrap();
-    connectSocket();
+    try {
+      connectSocket();
+    } catch {
+      // Socket is optional on auth pages — do not block the app.
+    }
 
     // Patch the cached overview when live stats arrive from ingestion.
     const onStatsUpdate = (payload: StatsUpdatePayload) => {
@@ -54,10 +58,13 @@ export function Providers({ children }: ProvidersProps) {
       <TooltipProvider>
         {children}
         <Toaster
-          position="top-right"
+          position="top-center"
+          containerStyle={{ top: 72, zIndex: 99999 }}
           toastOptions={{
-            className: 'text-sm',
-            duration: 4000,
+            className: 'text-sm font-medium shadow-lg',
+            duration: 5000,
+            success: { duration: 6000 },
+            error: { duration: 7000 },
           }}
         />
       </TooltipProvider>

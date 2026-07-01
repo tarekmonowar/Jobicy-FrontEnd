@@ -2,11 +2,12 @@
 
 // Login page — email/password form with optional `next` redirect after success.
 
-import { Suspense, useEffect } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -17,8 +18,15 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Skeleton } from '@/components/ui/skeleton';
-import { loginSchema, useAuth, type LoginFormValues } from '@/hooks/useAuth';
+import {
+  getApiErrorMessage,
+  loginSchema,
+  toastFormErrors,
+  useAuth,
+  type LoginFormValues,
+} from '@/hooks/useAuth';
+import { cn } from '@/lib/utils';
+import toast from 'react-hot-toast';
 
 /** Centered auth card shell shared by this page's layout. */
 function AuthShell({ children }: { children: React.ReactNode }) {
@@ -29,12 +37,31 @@ function AuthShell({ children }: { children: React.ReactNode }) {
   );
 }
 
+/** Inline alert — visible even if toast notifications fail to render. */
+function FormAlert({ message, variant }: { message: string; variant: 'error' | 'info' }) {
+  return (
+    <div
+      role="alert"
+      className={cn(
+        'flex items-start gap-2 rounded-md border px-3 py-2 text-sm',
+        variant === 'error'
+          ? 'border-destructive/40 bg-destructive/10 text-destructive'
+          : 'border-primary/30 bg-primary/5 text-foreground',
+      )}
+    >
+      <AlertCircle className="mt-0.5 size-4 shrink-0" />
+      <span>{message}</span>
+    </div>
+  );
+}
+
 /** Login form — reads `next` from the URL and redirects there after auth. */
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get('next');
-  const { login, isAuthed, isBootstrapping, isLoginPending } = useAuth();
+  const { login, isAuthed, isLoginPending } = useAuth();
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const {
     register,
@@ -45,25 +72,32 @@ function LoginForm() {
     defaultValues: { email: '', password: '' },
   });
 
-  // Already signed in — skip the login form.
+  // Already signed in — redirect away from login.
   useEffect(() => {
-    if (!isBootstrapping && isAuthed) {
+    if (isAuthed) {
       router.replace(next && next.startsWith('/') ? next : '/jobs');
     }
-  }, [isAuthed, isBootstrapping, next, router]);
+  }, [isAuthed, next, router]);
 
   const onSubmit = async (values: LoginFormValues) => {
-    await login(values, next);
+    setSubmitError(null);
+    try {
+      await login(values, next);
+    } catch (error) {
+      const msg = getApiErrorMessage(error, 'Sign in failed. Please try again.');
+      setSubmitError(msg);
+      toast.error(msg);
+    }
   };
 
-  if (isBootstrapping || isAuthed) {
+  // Brief redirect state only — never block the form while bootstrap runs.
+  if (isAuthed) {
     return (
       <AuthShell>
         <Card className="w-full max-w-md">
-          <CardContent className="space-y-3 pt-6">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
+          <CardContent className="flex items-center justify-center gap-2 py-12 text-muted-foreground">
+            <Loader2 className="size-5 animate-spin" />
+            Redirecting…
           </CardContent>
         </Card>
       </AuthShell>
@@ -77,8 +111,16 @@ function LoginForm() {
           <CardTitle>Welcome back</CardTitle>
           <CardDescription>Sign in to your Jobicy account</CardDescription>
         </CardHeader>
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form
+          method="post"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void handleSubmit(onSubmit, toastFormErrors)(e);
+          }}
+          noValidate
+        >
           <CardContent className="space-y-4">
+            {submitError && <FormAlert message={submitError} variant="error" />}
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium">
                 Email
@@ -88,6 +130,7 @@ function LoginForm() {
                 type="email"
                 autoComplete="email"
                 placeholder="you@example.com"
+                disabled={isLoginPending}
                 aria-invalid={!!errors.email}
                 {...register('email')}
               />
@@ -111,6 +154,7 @@ function LoginForm() {
                 id="password"
                 type="password"
                 autoComplete="current-password"
+                disabled={isLoginPending}
                 aria-invalid={!!errors.password}
                 {...register('password')}
               />
@@ -121,7 +165,14 @@ function LoginForm() {
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
             <Button type="submit" className="w-full" disabled={isLoginPending}>
-              {isLoginPending ? 'Signing in…' : 'Sign in'}
+              {isLoginPending ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Signing in…
+                </>
+              ) : (
+                'Sign in'
+              )}
             </Button>
             <p className="text-center text-sm text-muted-foreground">
               Don&apos;t have an account?{' '}
@@ -146,8 +197,8 @@ export default function LoginPage() {
       fallback={
         <AuthShell>
           <Card className="w-full max-w-md">
-            <CardContent className="pt-6">
-              <Skeleton className="h-48 w-full" />
+            <CardContent className="flex items-center justify-center py-12">
+              <Loader2 className="size-6 animate-spin text-muted-foreground" />
             </CardContent>
           </Card>
         </AuthShell>

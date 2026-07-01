@@ -7,7 +7,6 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -21,6 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   resetPasswordSchema,
+  toastFormErrors,
   useAuth,
   type ResetPasswordFormValues,
 } from '@/hooks/useAuth';
@@ -43,9 +43,12 @@ function ResetPasswordForm() {
 
   const onSubmit = async (values: ResetPasswordFormValues) => {
     if (!token) return;
-    await resetPassword({ token, password: values.password });
-    toast.success('Password updated — you can sign in now');
-    router.push('/login');
+    try {
+      await resetPassword({ token, password: values.password });
+      router.push('/login');
+    } catch {
+      // Error toast is shown by useAuth.
+    }
   };
 
   if (!token) {
@@ -78,7 +81,11 @@ function ResetPasswordForm() {
           <CardTitle>Set a new password</CardTitle>
           <CardDescription>Choose a strong password for your account</CardDescription>
         </CardHeader>
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form
+          method="post"
+          onSubmit={handleSubmit(onSubmit, toastFormErrors)}
+          noValidate
+        >
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <label htmlFor="password" className="text-sm font-medium">
