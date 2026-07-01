@@ -46,12 +46,3 @@ export function useSimilar(id: string, limit = 6) {
     enabled: Boolean(id),
   });
 }
-
-/** Full-text search — enabled when query length > 1. */
-export function useSearchJobs(q: string, page = 1) {
-  return useQuery({
-    queryKey: [...queryKeys.search(q), page],
-    queryFn: () => jobsApi.searchJobs(q, page),
-    enabled: q.trim().length > 1,
-  });
-}
