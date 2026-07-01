@@ -12,6 +12,10 @@ import type { RefreshResponse } from '@/types/auth';
 
 /** Extend Axios config so interceptors can mark retry/skip-refresh requests. */
 declare module 'axios' {
+  interface AxiosRequestConfig {
+    _retry?: boolean;
+    _skipRefresh?: boolean;
+  }
   interface InternalAxiosRequestConfig {
     _retry?: boolean;
     _skipRefresh?: boolean;
