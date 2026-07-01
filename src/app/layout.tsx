@@ -25,7 +25,10 @@ export const metadata: Metadata = {
     'Real-time Bangladesh job-market intelligence for software developers.',
 };
 
-/** Root layout — fonts, providers, navbar, footer. */
+/**
+ * Root layout — server shell with client Navbar inside Providers.
+ * Footer stays a server component sibling (not nested inside the client boundary).
+ */
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -40,8 +43,8 @@ export default function RootLayout({
         <Providers>
           <Navbar />
           <main className="flex-1">{children}</main>
-          <Footer />
         </Providers>
+        <Footer />
       </body>
     </html>
   );
