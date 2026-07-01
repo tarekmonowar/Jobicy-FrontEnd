@@ -21,14 +21,14 @@ export function useSocketEvent<E extends keyof ServerToClientEvents>(
     connectSocket();
     const socket = getSocket();
 
-    const listener = ((...args: Parameters<ServerToClientEvents[E]>) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const listener = (...args: unknown[]) => {
       (handlerRef.current as (...a: unknown[]) => void)(...args);
-    }) as ServerToClientEvents[E];
+    };
 
-    socket.on(event, listener);
+    // Socket.io generic listener typing is narrower than our event map.
+    socket.on(event, listener as never);
     return () => {
-      socket.off(event, listener);
+      socket.off(event, listener as never);
     };
   }, [event]);
 }
