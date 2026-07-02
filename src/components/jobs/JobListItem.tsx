@@ -1,14 +1,14 @@
 'use client';
 
 // Compact LinkedIn-style job row for the board's left column.
-// Clicking selects the job (detail opens in the right pane); the heart saves.
+// Clicking selects the job (detail opens in the right pane).
 
-import { Briefcase, Clock, MapPin } from 'lucide-react';
+import { Clock, MapPin } from 'lucide-react';
 import { cn, formatRelativeTime, isJobInactive } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { SourceBadge } from '@/components/jobs/SourceBadge';
 import { SalaryDisplay } from '@/components/jobs/SalaryDisplay';
-import { SaveButton } from '@/components/jobs/SaveButton';
+import { CategoryBadge } from '@/components/jobs/JobMetaBadges';
 import type { JobCardDto, JobType, LocationType } from '@/types/job';
 
 type JobListItemProps = {
@@ -31,8 +31,9 @@ const LOCATION_TYPE_LABELS: Record<LocationType, string> = {
 };
 
 /**
- * One selectable job row: title + company on the left, work/job type on the
- * right, then location, salary, source, and posted time. Highlights when open.
+ * One selectable job row:
+ * title + work type (right) → company + location + salary →
+ * source/posted (left) + category (right).
  */
 export function JobListItem({ job, selected, onSelect }: JobListItemProps) {
   const inactive = isJobInactive(job);
@@ -44,7 +45,6 @@ export function JobListItem({ job, selected, onSelect }: JobListItemProps) {
       aria-current={selected}
       onClick={() => onSelect(job.id)}
       onKeyDown={(e) => {
-        // Keyboard users select with Enter/Space like a real button.
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           onSelect(job.id);
@@ -57,7 +57,7 @@ export function JobListItem({ job, selected, onSelect }: JobListItemProps) {
           : 'hover:bg-muted/40 focus-visible:bg-muted/50',
       )}
     >
-      {/* Title (left) + save (right) */}
+      {/* Title (left) + Full-time · Onsite (right) */}
       <div className="flex items-start justify-between gap-2">
         <h3
           className={cn(
@@ -67,23 +67,20 @@ export function JobListItem({ job, selected, onSelect }: JobListItemProps) {
         >
           {job.title}
         </h3>
-        <SaveButton jobId={job.id} isSaved={job.isSaved} className="-mt-1 -mr-1" />
-      </div>
-
-      {/* Company (left) + work/job type (right) */}
-      <div className="mt-0.5 flex items-center justify-between gap-2">
-        <p className="min-w-0 truncate text-sm text-muted-foreground">{job.company}</p>
         <Badge variant="secondary" className="shrink-0 text-[11px] font-medium">
           {JOB_TYPE_LABELS[job.jobType]} · {LOCATION_TYPE_LABELS[job.locationType]}
         </Badge>
       </div>
 
-      {/* Location + salary */}
-      <div className="mt-2 flex items-center justify-between gap-3 text-xs text-muted-foreground">
-        <span className="inline-flex min-w-0 items-center gap-1">
-          <MapPin className="size-3.5 shrink-0" aria-hidden />
-          <span className="truncate">{job.location}</span>
-        </span>
+      {/* Company + location (left) · salary (right) */}
+      <div className="mt-0.5 flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
+          <p className="shrink-0 truncate">{job.company}</p>
+          <span className="inline-flex min-w-0 items-center gap-1 truncate text-xs">
+            <MapPin className="size-3.5 shrink-0" aria-hidden />
+            <span className="truncate">{job.location}</span>
+          </span>
+        </div>
         <SalaryDisplay
           min={job.salaryMin}
           max={job.salaryMax}
@@ -93,18 +90,17 @@ export function JobListItem({ job, selected, onSelect }: JobListItemProps) {
         />
       </div>
 
-      {/* Footer: source · category · posted time · inactive flag */}
-      <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
-        <SourceBadge source={job.source} sourceName={job.sourceName} prominent />
-        <span className="inline-flex items-center gap-1">
-          <Briefcase className="size-3 shrink-0" aria-hidden />
-          {job.category === 'OTHER' ? 'Developer' : job.category.replace('_', ' ').toLowerCase()}
-        </span>
-        <span className="inline-flex items-center gap-1">
-          <Clock className="size-3 shrink-0" aria-hidden />
-          {formatRelativeTime(job.postedAt)}
-        </span>
-        {inactive && <span className="text-muted-foreground/80">· Inactive</span>}
+      {/* Source + posted (left) · category (right) */}
+      <div className="mt-2 flex items-center justify-between gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
+          <SourceBadge source={job.source} sourceName={job.sourceName} prominent />
+          <span className="inline-flex items-center gap-1">
+            <Clock className="size-3 shrink-0" aria-hidden />
+            {formatRelativeTime(job.postedAt)}
+          </span>
+          {inactive && <span className="text-muted-foreground/80">· Inactive</span>}
+        </div>
+        <CategoryBadge category={job.category} />
       </div>
     </div>
   );

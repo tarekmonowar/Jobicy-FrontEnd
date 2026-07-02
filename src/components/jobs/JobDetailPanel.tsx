@@ -7,13 +7,8 @@ import { ArrowLeft } from 'lucide-react';
 import { useJob } from '@/hooks/useJobs';
 import { JobHeader } from '@/components/job-detail/JobHeader';
 import { JobDescription } from '@/components/job-detail/JobDescription';
-import { CompanyPanel } from '@/components/job-detail/CompanyPanel';
-import { MarketInsight } from '@/components/job-detail/MarketInsight';
 import { SimilarJobs } from '@/components/job-detail/SimilarJobs';
-import { OriginalPostLink } from '@/components/job-detail/OriginalPostLink';
-import { ApplyButton } from '@/components/job-detail/ApplyButton';
-import { ShareButton } from '@/components/job-detail/ShareButton';
-import { SaveButton } from '@/components/jobs/SaveButton';
+import { JobDetailActions } from '@/components/job-detail/JobDetailActions';
 import { SkillTags } from '@/components/jobs/SkillTags';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -99,12 +94,7 @@ export function JobDetailPanel({ jobId, onBack, className }: JobDetailPanelProps
 
         <JobHeader job={job} />
 
-        <div className="flex flex-wrap items-center gap-2">
-          <OriginalPostLink sourceUrl={job.sourceUrl} />
-          <ApplyButton job={job} />
-          <ShareButton jobId={job.id} title={job.title} />
-          <SaveButton jobId={job.id} isSaved={job.isSaved} className="size-10 border" />
-        </div>
+        <JobDetailActions job={job} />
       </div>
 
       {/* Scrollable detail body */}
@@ -141,12 +131,7 @@ export function JobDetailPanel({ jobId, onBack, className }: JobDetailPanelProps
           </section>
         )}
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <CompanyPanel job={job} />
-          <MarketInsight insight={job.marketInsight} />
-        </div>
-
-        <SimilarJobs jobId={job.id} />
+        <SimilarJobs jobId={job.id} limit={3} />
 
         <p className="text-xs text-muted-foreground">
           Posted {formatRelativeTime(job.postedAt)} · {job.viewCount} views

@@ -36,8 +36,8 @@ function RowSkeleton() {
 }
 
 /**
- * Renders the paginated job rows with loading / empty / error states and page
- * controls pinned to the bottom. The row area scrolls independently.
+ * Renders the paginated job rows with loading / empty / error states. Pagination
+ * sits at the bottom of the scroll area (LinkedIn-style — scroll to see it).
  */
 export function JobList({
   query,
@@ -68,13 +68,8 @@ export function JobList({
       aria-label="Job listings"
     >
       {/* Result summary header */}
-      <header className="flex shrink-0 items-center justify-between border-b px-4 py-2.5 text-xs text-muted-foreground">
+      <header className="flex shrink-0 items-center border-b px-4 py-2.5 text-xs text-muted-foreground">
         <span>{meta ? `${meta.total.toLocaleString()} jobs` : 'Jobs'}</span>
-        {meta && meta.totalPages > 1 && (
-          <span>
-            Page {meta.page} of {meta.totalPages}
-          </span>
-        )}
       </header>
 
       {/* Scrollable rows */}
@@ -116,20 +111,20 @@ export function JobList({
                 onSelect={onSelect}
               />
             ))}
+
+            {/* Pagination at the end of the list — only visible after scrolling down */}
+            {meta && meta.totalPages > 1 && (
+              <div className="border-t bg-muted/20 px-2 py-3">
+                <JobPagination
+                  page={meta.page}
+                  totalPages={meta.totalPages}
+                  onPageChange={onPageChange}
+                />
+              </div>
+            )}
           </div>
         )}
       </div>
-
-      {/* Page controls */}
-      {meta && meta.totalPages > 1 && (
-        <footer className="shrink-0 border-t p-2">
-          <JobPagination
-            page={meta.page}
-            totalPages={meta.totalPages}
-            onPageChange={onPageChange}
-          />
-        </footer>
-      )}
     </section>
   );
 }
