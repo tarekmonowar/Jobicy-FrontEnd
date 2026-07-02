@@ -1,0 +1,157 @@
+'use client';
+
+// Right column of the jobs board — full detail of the selected job.
+// Header (title + actions) is pinned; the body scrolls independently.
+
+import { ArrowLeft } from 'lucide-react';
+import { useJob } from '@/hooks/useJobs';
+import { JobHeader } from '@/components/job-detail/JobHeader';
+import { JobDescription } from '@/components/job-detail/JobDescription';
+import { CompanyPanel } from '@/components/job-detail/CompanyPanel';
+import { MarketInsight } from '@/components/job-detail/MarketInsight';
+import { SimilarJobs } from '@/components/job-detail/SimilarJobs';
+import { OriginalPostLink } from '@/components/job-detail/OriginalPostLink';
+import { ApplyButton } from '@/components/job-detail/ApplyButton';
+import { ShareButton } from '@/components/job-detail/ShareButton';
+import { SaveButton } from '@/components/jobs/SaveButton';
+import { SkillTags } from '@/components/jobs/SkillTags';
+import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { ErrorState } from '@/components/ui/ErrorState';
+import { Button } from '@/components/ui/button';
+import { cn, formatRelativeTime } from '@/lib/utils';
+
+type JobDetailPanelProps = {
+  jobId: string | null;
+  /** Shown on mobile to close the full-screen detail overlay. */
+  onBack?: () => void;
+  className?: string;
+};
+
+const CONTAINER = 'flex h-full flex-col overflow-hidden rounded-xl border bg-card';
+
+/**
+ * Fetches and renders the selected job. Shows a placeholder when nothing is
+ * selected, a skeleton while loading, and an error state on failure.
+ */
+export function JobDetailPanel({ jobId, onBack, className }: JobDetailPanelProps) {
+  const { data: job, isLoading, isError, error, refetch } = useJob(jobId ?? '');
+
+  if (!jobId) {
+    return (
+      <div className={cn(CONTAINER, className)}>
+        <div className="flex flex-1 items-center justify-center p-8">
+          <EmptyState
+            title="Select a job"
+            message="Pick a role from the list to see the full details here."
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className={cn(CONTAINER, className)}>
+        <div className="space-y-4 p-6">
+          <Skeleton className="h-7 w-2/3" />
+          <Skeleton className="h-4 w-1/3" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-64 w-full" />
+        </div>
+      </div>
+    );
+  }
+
+  if (isError || !job) {
+    return (
+      <div className={cn(CONTAINER, className)}>
+        <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8">
+          <ErrorState
+            message={error?.message ?? 'Job not found'}
+            onRetry={() => void refetch()}
+          />
+          {onBack && (
+            <Button variant="outline" onClick={onBack}>
+              Back to list
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={cn(CONTAINER, className)}>
+      {/* Pinned header — title, salary, and the primary actions */}
+      <div className="shrink-0 space-y-4 border-b px-5 py-4">
+        {onBack && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="-ml-2 lg:hidden"
+            onClick={onBack}
+          >
+            <ArrowLeft className="size-4" />
+            Back
+          </Button>
+        )}
+
+        <JobHeader job={job} />
+
+        <div className="flex flex-wrap items-center gap-2">
+          <OriginalPostLink sourceUrl={job.sourceUrl} />
+          <ApplyButton job={job} />
+          <ShareButton jobId={job.id} title={job.title} />
+          <SaveButton jobId={job.id} isSaved={job.isSaved} className="size-10 border" />
+        </div>
+      </div>
+
+      {/* Scrollable detail body */}
+      <div className="min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain px-5 py-5">
+        <section>
+          <h2 className="mb-2 text-sm font-medium text-muted-foreground">Skills</h2>
+          <SkillTags skills={job.skills} max={20} />
+        </section>
+
+        <section>
+          <h2 className="mb-3 text-lg font-semibold">Description</h2>
+          <JobDescription markdown={job.description} />
+        </section>
+
+        {job.requirements.length > 0 && (
+          <section>
+            <h2 className="mb-2 text-lg font-semibold">Requirements</h2>
+            <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+              {job.requirements.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {job.benefits.length > 0 && (
+          <section>
+            <h2 className="mb-2 text-lg font-semibold">Benefits</h2>
+            <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+              {job.benefits.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <CompanyPanel job={job} />
+          <MarketInsight insight={job.marketInsight} />
+        </div>
+
+        <SimilarJobs jobId={job.id} />
+
+        <p className="text-xs text-muted-foreground">
+          Posted {formatRelativeTime(job.postedAt)} · {job.viewCount} views
+        </p>
+      </div>
+    </div>
+  );
+}

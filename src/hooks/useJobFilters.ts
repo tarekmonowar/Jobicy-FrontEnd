@@ -65,8 +65,16 @@ export function parseJobFilters(searchParams: URLSearchParams): JobFilters {
   };
 }
 
-/** Serialize JobFilters into a query string (omits defaults/empties). */
-function stringifyJobFilters(filters: JobFilters): string {
+/**
+ * Serialize the whole board state (filters + page + selected job) into a query
+ * string. `page` is only written when past the first page and `selected` only
+ * when a job is open, so tidy URLs stay shareable.
+ */
+function stringifyBoard(
+  filters: JobFilters,
+  page: number,
+  selected: string | null,
+): string {
   const params = new URLSearchParams();
 
   if (filters.q) params.set('q', filters.q);
@@ -83,34 +91,67 @@ function stringifyJobFilters(filters: JobFilters): string {
   if (filters.source?.length) params.set('source', filters.source.join(','));
   if (filters.datePosted) params.set('datePosted', filters.datePosted);
   if (filters.sort && filters.sort !== DEFAULT_SORT) params.set('sort', filters.sort);
+  if (page > 1) params.set('page', String(page));
+  if (selected) params.set('selected', selected);
 
   return params.toString();
 }
 
+/** Read the current page number from the URL (defaults to 1). */
+function parsePage(searchParams: URLSearchParams): number {
+  const n = Number(searchParams.get('page'));
+  return Number.isInteger(n) && n > 0 ? n : 1;
+}
+
 /**
- * Read/write job filters via the URL so filtered views are shareable.
+ * Read/write the jobs board state via the URL so filtered/selected views are
+ * shareable. Returns the parsed filters plus the current page and the selected
+ * job id, along with setters that keep them in sync.
  */
 export function useJobFilters() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const filters = useMemo(
-    () => parseJobFilters(searchParams),
-    [searchParams],
-  );
+  const filters = useMemo(() => parseJobFilters(searchParams), [searchParams]);
+  const page = useMemo(() => parsePage(searchParams), [searchParams]);
+  const selected = searchParams.get('selected');
 
-  const setFilter = useCallback(
-    (partial: Partial<JobFilters>) => {
-      const next = { ...filters, ...partial, page: undefined };
-      const qs = stringifyJobFilters(next);
+  // Single place that writes the URL — every setter routes through here.
+  const pushBoard = useCallback(
+    (nextFilters: JobFilters, nextPage: number, nextSelected: string | null) => {
+      const qs = stringifyBoard(nextFilters, nextPage, nextSelected);
       router.replace(qs ? `/jobs?${qs}` : '/jobs', { scroll: false });
     },
-    [filters, router],
+    [router],
+  );
+
+  // Changing a filter resets to page 1 and clears the open job (results change).
+  const setFilter = useCallback(
+    (partial: Partial<JobFilters>) => {
+      pushBoard({ ...filters, ...partial }, 1, null);
+    },
+    [filters, pushBoard],
+  );
+
+  // A new page clears the selection so the UI can auto-open the first result.
+  const setPage = useCallback(
+    (nextPage: number) => {
+      pushBoard(filters, nextPage, null);
+    },
+    [filters, pushBoard],
+  );
+
+  // Selecting a job keeps the current filters/page — only the open job changes.
+  const setSelected = useCallback(
+    (id: string | null) => {
+      pushBoard(filters, page, id);
+    },
+    [filters, page, pushBoard],
   );
 
   const reset = useCallback(() => {
     router.replace('/jobs', { scroll: false });
   }, [router]);
 
-  return { filters, setFilter, reset };
+  return { filters, page, selected, setFilter, setPage, setSelected, reset };
 }

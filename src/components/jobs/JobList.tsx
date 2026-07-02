@@ -1,115 +1,135 @@
 'use client';
 
-// Infinite-scroll job list with loading, empty, and error states.
+// Left column of the jobs board — a self-scrolling, paginated list of rows.
+// One job is "selected" at a time; the detail opens in the right pane.
 
 import { useEffect, useRef } from 'react';
-import { JobCard } from '@/components/jobs/JobCard';
+import { JobListItem } from '@/components/jobs/JobListItem';
+import { JobPagination } from '@/components/jobs/JobPagination';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Button } from '@/components/ui/button';
-import type { useJobs } from '@/hooks/useJobs';
+import { cn } from '@/lib/utils';
+import type { useJobsPage } from '@/hooks/useJobs';
 
-type JobsQuery = ReturnType<typeof useJobs>;
+type JobsPageQuery = ReturnType<typeof useJobsPage>;
 
 type JobListProps = {
-  query: JobsQuery;
+  query: JobsPageQuery;
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+  page: number;
+  onPageChange: (page: number) => void;
   onResetFilters?: () => void;
+  className?: string;
 };
 
-function JobCardSkeleton() {
+function RowSkeleton() {
   return (
-    <div className="rounded-xl border bg-card p-4 space-y-3">
-      <Skeleton className="h-4 w-24" />
-      <Skeleton className="h-5 w-3/4" />
-      <Skeleton className="h-4 w-1/2" />
-      <Skeleton className="h-4 w-full" />
+    <div className="space-y-2 border-b px-4 py-3">
+      <Skeleton className="h-4 w-3/4" />
+      <Skeleton className="h-3 w-1/2" />
+      <Skeleton className="h-3 w-2/3" />
     </div>
   );
 }
 
 /**
- * Renders paginated job cards; loads more when the sentinel enters the viewport.
+ * Renders the paginated job rows with loading / empty / error states and page
+ * controls pinned to the bottom. The row area scrolls independently.
  */
-export function JobList({ query, onResetFilters }: JobListProps) {
-  const sentinelRef = useRef<HTMLDivElement>(null);
-  const { data, isLoading, isError, error, fetchNextPage, hasNextPage, isFetchingNextPage, refetch } =
-    query;
+export function JobList({
+  query,
+  selectedId,
+  onSelect,
+  page,
+  onPageChange,
+  onResetFilters,
+  className,
+}: JobListProps) {
+  const { data, isLoading, isError, error, refetch, isFetching } = query;
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const jobs = data?.pages.flatMap((p) => p.data) ?? [];
+  const jobs = data?.data ?? [];
+  const meta = data?.meta;
 
-  // IntersectionObserver triggers the next page fetch
+  // Jump back to the top of the list whenever the page changes.
   useEffect(() => {
-    const el = sentinelRef.current;
-    if (!el || !hasNextPage) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting && !isFetchingNextPage) {
-          void fetchNextPage();
-        }
-      },
-      { rootMargin: '200px' },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
-
-  if (isLoading) {
-    return (
-      <div className="grid gap-4">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <JobCardSkeleton key={i} />
-        ))}
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <ErrorState
-        message={error?.message ?? 'Failed to load jobs'}
-        onRetry={() => void refetch()}
-      />
-    );
-  }
-
-  if (jobs.length === 0) {
-    return (
-      <EmptyState
-        title="No jobs found"
-        message="Try adjusting your filters or check back after the next fetch run."
-        action={
-          onResetFilters ? (
-            <Button variant="outline" onClick={onResetFilters}>
-              Clear filters
-            </Button>
-          ) : undefined
-        }
-      />
-    );
-  }
+    scrollRef.current?.scrollTo({ top: 0 });
+  }, [page]);
 
   return (
-    <div className="space-y-4">
-      {jobs.map((job) => (
-        <JobCard key={job.id} job={job} />
-      ))}
-
-      <div ref={sentinelRef} className="h-4" aria-hidden />
-
-      {isFetchingNextPage && (
-        <div className="grid gap-4">
-          <JobCardSkeleton />
-          <JobCardSkeleton />
-        </div>
+    <section
+      className={cn(
+        'flex h-full flex-col overflow-hidden rounded-xl border bg-card',
+        className,
       )}
+      aria-label="Job listings"
+    >
+      {/* Result summary header */}
+      <header className="flex shrink-0 items-center justify-between border-b px-4 py-2.5 text-xs text-muted-foreground">
+        <span>{meta ? `${meta.total.toLocaleString()} jobs` : 'Jobs'}</span>
+        {meta && meta.totalPages > 1 && (
+          <span>
+            Page {meta.page} of {meta.totalPages}
+          </span>
+        )}
+      </header>
 
-      {!hasNextPage && jobs.length > 0 && (
-        <p className="py-4 text-center text-sm text-muted-foreground">
-          You&apos;ve reached the end of the list
-        </p>
+      {/* Scrollable rows */}
+      <div
+        ref={scrollRef}
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
+        aria-busy={isFetching}
+      >
+        {isLoading ? (
+          Array.from({ length: 8 }).map((_, i) => <RowSkeleton key={i} />)
+        ) : isError ? (
+          <div className="p-6">
+            <ErrorState
+              message={error?.message ?? 'Failed to load jobs'}
+              onRetry={() => void refetch()}
+            />
+          </div>
+        ) : jobs.length === 0 ? (
+          <div className="p-6">
+            <EmptyState
+              title="No jobs found"
+              message="Try adjusting your filters or check back after the next fetch run."
+              action={
+                onResetFilters ? (
+                  <Button variant="outline" onClick={onResetFilters}>
+                    Clear filters
+                  </Button>
+                ) : undefined
+              }
+            />
+          </div>
+        ) : (
+          <div className={cn(isFetching && 'opacity-60 transition-opacity')}>
+            {jobs.map((job) => (
+              <JobListItem
+                key={job.id}
+                job={job}
+                selected={job.id === selectedId}
+                onSelect={onSelect}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Page controls */}
+      {meta && meta.totalPages > 1 && (
+        <footer className="shrink-0 border-t p-2">
+          <JobPagination
+            page={meta.page}
+            totalPages={meta.totalPages}
+            onPageChange={onPageChange}
+          />
+        </footer>
       )}
-    </div>
+    </section>
   );
 }

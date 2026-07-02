@@ -2,13 +2,14 @@
 
 // Job list/detail queries — wraps React Query + jobsApi.
 
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import * as jobsApi from '@/lib/api/jobsApi';
 import { queryKeys } from '@/lib/queryClient';
 import type { JobFilters } from '@/types/job';
 
 /**
- * Infinite-scroll job list for the board — one page per fetch.
+ * Infinite-scroll job list — one page per fetch (kept for consumers that page
+ * by scrolling rather than numbered pages).
  */
 export function useJobs(filters: JobFilters) {
   return useInfiniteQuery({
@@ -18,6 +19,18 @@ export function useJobs(filters: JobFilters) {
     initialPageParam: 1,
     getNextPageParam: (lastPage) =>
       lastPage.meta.hasNext ? lastPage.meta.page + 1 : undefined,
+  });
+}
+
+/**
+ * Numbered-pagination job list for the LinkedIn-style board.
+ * Keeps the previous page's data while fetching so the list doesn't flash.
+ */
+export function useJobsPage(filters: JobFilters, page: number, limit = 30) {
+  return useQuery({
+    queryKey: queryKeys.jobs({ ...filters, page, limit }),
+    queryFn: () => jobsApi.getJobs({ ...filters, page, limit }),
+    placeholderData: keepPreviousData,
   });
 }
 

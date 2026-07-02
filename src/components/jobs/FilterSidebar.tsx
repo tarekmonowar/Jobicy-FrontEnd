@@ -3,6 +3,7 @@
 // Filter sidebar — Region, work type, source, role, experience, salary.
 
 import { type ReactNode } from 'react';
+import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
@@ -21,6 +22,8 @@ type FilterSidebarProps = {
   onChange: (partial: Partial<JobFilters>) => void;
   onReset: () => void;
   className?: string;
+  /** When provided, shows a close button in the header (used inside the drawer). */
+  onClose?: () => void;
 };
 
 const PRIMARY_CATEGORIES: { value: JobCategory; label: string }[] = [
@@ -101,7 +104,7 @@ function toggleInArray<T>(current: T[] | undefined, value: T): T[] {
 }
 
 /** Job board filters — updates shareable URL via useJobFilters. */
-export function FilterSidebar({ filters, onChange, onReset, className }: FilterSidebarProps) {
+export function FilterSidebar({ filters, onChange, onReset, className, onClose }: FilterSidebarProps) {
   const setRegion = (region: RegionFilter | undefined) => onChange({ region });
 
   const setWorkTypes = (locationType: LocationType[]) => {
@@ -125,9 +128,22 @@ export function FilterSidebar({ filters, onChange, onReset, className }: FilterS
       {/* Fixed header — filter body scrolls below */}
       <div className="flex shrink-0 items-center justify-between border-b px-4 py-3">
         <h2 className="font-semibold">Filters</h2>
-        <Button variant="ghost" size="sm" onClick={onReset}>
-          Reset
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="sm" onClick={onReset}>
+            Reset
+          </Button>
+          {onClose && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              onClick={onClose}
+              aria-label="Close filters"
+            >
+              <X className="size-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain p-4">
