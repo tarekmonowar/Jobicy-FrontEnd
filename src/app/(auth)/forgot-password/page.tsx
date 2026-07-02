@@ -23,16 +23,9 @@ import {
   useAuth,
   type ForgotPasswordFormValues,
 } from '@/hooks/useAuth';
+import { AuthShell } from '@/components/auth/AuthShell';
 
 const FORGOT_SUCCESS_KEY = 'jobicy_forgot_success_email';
-
-function AuthShell({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center bg-muted/30 px-4 py-12">
-      {children}
-    </div>
-  );
-}
 
 /** Request a password-reset email — shows a generic success message either way. */
 export default function ForgotPasswordPage() {

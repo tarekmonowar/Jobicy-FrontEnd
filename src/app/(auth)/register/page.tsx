@@ -27,6 +27,7 @@ import {
 } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
+import { AuthShell } from '@/components/auth/AuthShell';
 
 const REGISTER_SUCCESS_KEY = 'jobicy_register_success_email';
 
@@ -96,8 +97,8 @@ export default function RegisterPage() {
 
   if (registeredEmail) {
     return (
-      <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center px-4 py-12">
-        <Card className="w-full max-w-md text-center">
+      <AuthShell>
+        <Card className="w-full max-w-md text-center shadow-md">
           <CardHeader>
             <div className="mx-auto mb-2 flex size-14 items-center justify-center rounded-full bg-success/10">
               <CheckCircle2 className="size-7 text-success" />
@@ -144,13 +145,13 @@ export default function RegisterPage() {
             </Button>
           </CardFooter>
         </Card>
-      </div>
+      </AuthShell>
     );
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center px-4 py-12">
-      <Card className="w-full max-w-md">
+    <AuthShell>
+      <Card className="w-full max-w-md shadow-md">
         <CardHeader>
           <CardTitle>Create an account</CardTitle>
           <CardDescription>
@@ -240,6 +241,6 @@ export default function RegisterPage() {
           </CardFooter>
         </form>
       </Card>
-    </div>
+    </AuthShell>
   );
 }

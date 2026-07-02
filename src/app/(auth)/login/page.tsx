@@ -27,15 +27,7 @@ import {
 } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
-
-/** Centered auth card shell shared by this page's layout. */
-function AuthShell({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center bg-muted/30 px-4 py-12">
-      {children}
-    </div>
-  );
-}
+import { AuthShell } from '@/components/auth/AuthShell';
 
 /** Inline alert — visible even if toast notifications fail to render. */
 function FormAlert({ message, variant }: { message: string; variant: 'error' | 'info' }) {

@@ -25,14 +25,7 @@ import {
   useAuth,
   type ResetPasswordFormValues,
 } from '@/hooks/useAuth';
-
-function AuthShell({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center bg-muted/30 px-4 py-12">
-      {children}
-    </div>
-  );
-}
+import { AuthShell } from '@/components/auth/AuthShell';
 
 /** Reset form — token comes from `?token=` in the email link. */
 function ResetPasswordForm() {

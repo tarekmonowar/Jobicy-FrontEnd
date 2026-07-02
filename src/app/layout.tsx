@@ -41,12 +41,16 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full`}
     >
-      <body className="flex min-h-full flex-col">
+      <body className="flex min-h-dvh flex-col">
         <Providers>
           <SkipToContent />
           <Navbar />
           <PageTransition>
-            <main id="main-content" className="flex-1 outline-none" tabIndex={-1}>
+            <main
+              id="main-content"
+              className="flex min-h-0 flex-1 flex-col outline-none"
+              tabIndex={-1}
+            >
               {children}
             </main>
           </PageTransition>
