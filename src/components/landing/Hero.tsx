@@ -44,9 +44,16 @@ export function Hero() {
 
   return (
     <section className="relative overflow-hidden px-4 py-20 sm:py-28">
-      {/* Soft gradient backdrop */}
+      {/* Soft-blur photo backdrop */}
+      <div className="pointer-events-none absolute inset-0 -z-20" aria-hidden>
+        <div
+          className="absolute inset-0 scale-[1.02] bg-cover bg-center bg-no-repeat blur-[2px]"
+          style={{ backgroundImage: "url('/bg.jpg')" }}
+        />
+      </div>
+      {/* Light scrim — enough for text, image still visible */}
       <div
-        className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-primary/8 via-background to-background"
+        className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-background/55 via-background/45 to-background/65"
         aria-hidden
       />
 
@@ -56,19 +63,18 @@ export function Hero() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: 'easeOut' }}
       >
-        <div className="mb-4 inline-flex items-center gap-2 rounded-full border bg-card px-4 py-1.5 text-sm text-muted-foreground shadow-sm">
+        {/* <div className="mb-4 inline-flex items-center gap-2 rounded-full border bg-card px-4 py-1.5 text-sm text-muted-foreground shadow-sm">
           <Sparkles className="size-4 text-primary" aria-hidden />
           Bangladesh developer job intelligence
-        </div>
+        </div> */}
 
         <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-          Find your next role with{' '}
-          <span className="text-primary">{env.appName}</span>
+          Find your next role with <span className="text-primary">{env.appName}</span>
         </h1>
 
-        <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground sm:text-xl">
-          Real-time market data from LinkedIn, Indeed, Glassdoor, and more — aggregated
-          and deduplicated for Bangladesh&apos;s software developer community.
+        <p className="mx-auto mt-5 max-w-2xl text-lg  sm:text-xl">
+          Real-time market data from LinkedIn, Indeed, Glassdoor, and more — aggregated and
+          deduplicated for Bangladesh&apos;s software developer community.
         </p>
 
         <div className="mt-10 flex flex-col items-center gap-2">
