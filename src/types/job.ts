@@ -61,6 +61,7 @@ export type JobCardDto = {
   jobType: JobType;
   category: JobCategory;
   skills: string[];
+  benefits: string[];
   salaryMin: number | null;
   salaryMax: number | null;
   salaryCurrency: SalaryCurrency | null;
@@ -68,6 +69,7 @@ export type JobCardDto = {
   experienceMin: number | null;
   experienceMax: number | null;
   source: JobSource;
+  sourceName: string | null;
   sourceUrl: string;
   postedAt: string;
   isActive: boolean;

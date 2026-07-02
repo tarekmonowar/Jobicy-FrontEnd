@@ -10,6 +10,9 @@ type SalaryDisplayProps = {
   currency: SalaryCurrency | null;
   negotiable: boolean;
   className?: string;
+  /** Prefix with "Salary:" label (job cards). */
+  showLabel?: boolean;
+  valueClassName?: string;
 };
 
 /**
@@ -21,9 +24,20 @@ export function SalaryDisplay({
   currency,
   negotiable,
   className,
+  showLabel = false,
+  valueClassName,
 }: SalaryDisplayProps) {
   const displayCurrency = useUiStore((s) => s.currency);
   const text = formatSalary(min, max, currency, negotiable, displayCurrency);
+
+  if (showLabel) {
+    return (
+      <div className={className ?? 'text-sm text-right'}>
+        <span className="font-normal text-muted-foreground">Salary: </span>
+        <span className={valueClassName ?? 'font-semibold text-foreground'}>{text}</span>
+      </div>
+    );
+  }
 
   return (
     <span className={className ?? 'text-sm font-medium text-foreground'}>
