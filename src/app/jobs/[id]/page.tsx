@@ -11,6 +11,7 @@ import { JobDescription } from '@/components/job-detail/JobDescription';
 import { CompanyPanel } from '@/components/job-detail/CompanyPanel';
 import { MarketInsight } from '@/components/job-detail/MarketInsight';
 import { SimilarJobs } from '@/components/job-detail/SimilarJobs';
+import { OriginalPostLink } from '@/components/job-detail/OriginalPostLink';
 import { ApplyButton } from '@/components/job-detail/ApplyButton';
 import { ShareButton } from '@/components/job-detail/ShareButton';
 import { SaveButton } from '@/components/jobs/SaveButton';
@@ -70,6 +71,7 @@ export default function JobDetailPage({ params }: PageProps) {
           <JobHeader job={job} />
 
           <div className="flex flex-wrap gap-3">
+            <OriginalPostLink sourceUrl={job.sourceUrl} />
             <ApplyButton job={job} />
             <ShareButton jobId={job.id} title={job.title} />
             <SaveButton jobId={job.id} isSaved={job.isSaved} className="size-10" />

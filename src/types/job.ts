@@ -84,6 +84,8 @@ export type JobDetailDto = JobCardDto & {
   benefits: string[];
   sourceName: string | null;
   scrapedAt: string;
+  companyWebsite: string | null;
+  companyLinkedIn: string | null;
   marketInsight: {
     similarActiveCount: number;
     demandLabel: 'Low' | 'Medium' | 'High';

@@ -7,6 +7,7 @@ import { Filter, PanelLeftClose } from 'lucide-react';
 import { useJobFilters } from '@/hooks/useJobFilters';
 import { useJobs } from '@/hooks/useJobs';
 import { FilterSidebar } from '@/components/jobs/FilterSidebar';
+import { PostedDropdown } from '@/components/jobs/PostedDropdown';
 import { SortDropdown } from '@/components/jobs/SortDropdown';
 import { JobList } from '@/components/jobs/JobList';
 import { Button } from '@/components/ui/button';
@@ -61,12 +62,12 @@ function JobsBoardContent() {
               aria-label="Close filters overlay"
             />
             <div
-              className="absolute inset-y-0 left-0 w-[min(100%,20rem)] overflow-y-auto bg-background p-4 shadow-xl"
+              className="absolute inset-y-0 left-0 flex w-[min(100%,20rem)] flex-col bg-background shadow-xl"
               role="dialog"
               aria-modal="true"
               aria-label="Job filters"
             >
-              <div className="mb-4 flex justify-end">
+              <div className="flex shrink-0 justify-end p-4 pb-0">
                 <Button
                   type="button"
                   variant="ghost"
@@ -77,7 +78,14 @@ function JobsBoardContent() {
                   <PanelLeftClose className="size-4" />
                 </Button>
               </div>
-              <FilterSidebar filters={filters} onChange={setFilter} onReset={reset} />
+              <div className="min-h-0 flex-1 px-4 pb-4">
+                <FilterSidebar
+                  filters={filters}
+                  onChange={setFilter}
+                  onReset={reset}
+                  className="h-full max-h-none"
+                />
+              </div>
             </div>
           </div>
         )}
@@ -85,6 +93,10 @@ function JobsBoardContent() {
         <main className="min-w-0 flex-1 space-y-4" aria-label="Job listings">
           <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-card px-4 py-3">
             <SortDropdown value={sort} onChange={(s) => setFilter({ sort: s })} />
+            <PostedDropdown
+              value={filters.datePosted}
+              onChange={(datePosted) => setFilter({ datePosted })}
+            />
           </div>
 
           <JobList query={jobsQuery} onResetFilters={reset} />
