@@ -31,7 +31,6 @@ export function SearchSuggestions({
         'absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-xl border bg-popover shadow-lg',
         className,
       )}
-      role="listbox"
       aria-label="Search suggestions"
     >
       {recent.length > 0 && (
@@ -57,7 +56,6 @@ export function SearchSuggestions({
               <li key={term}>
                 <button
                   type="button"
-                  role="option"
                   className="rounded-full bg-secondary px-3 py-1 text-sm transition-colors hover:bg-accent"
                   onClick={() => onSelect(term)}
                 >
@@ -79,7 +77,6 @@ export function SearchSuggestions({
             <li key={term}>
               <button
                 type="button"
-                role="option"
                 className="rounded-full border border-border px-3 py-1 text-sm transition-colors hover:border-primary hover:text-primary"
                 onClick={() => onSelect(term)}
               >

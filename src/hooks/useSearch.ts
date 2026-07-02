@@ -2,7 +2,7 @@
 
 // Search page — debounced query, recent searches (localStorage), infinite results.
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import * as jobsApi from '@/lib/api/jobsApi';
@@ -57,26 +57,30 @@ export function clearRecentSearches(): void {
 
 /**
  * URL-synced search input with debounce and recent-search helpers.
- * Updates `?q=` in the address bar when the debounced query changes.
+ * Pass `initialQuery` from the URL; remount via `key={urlQuery}` on back/forward.
  */
-export function useSearchState() {
+export function useSearchState(initialQuery: string) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const urlQuery = searchParams.get('q') ?? '';
 
-  const [query, setQuery] = useState(urlQuery);
+  const [query, setQuery] = useState(initialQuery);
   const debouncedQuery = useDebounce(query, 300);
-  const [recent, setRecent] = useState<string[]>([]);
+  const [recent, setRecent] = useState<string[]>(() => getRecentSearches());
+  // Tracks the last query we pushed to the URL — avoids clobbering input while typing.
+  const lastPushedRef = useRef(initialQuery.trim());
 
-  // Hydrate recent list on mount (client-only).
+  // Sync input when the user navigates with back/forward (not our own router.replace).
   useEffect(() => {
-    setRecent(getRecentSearches());
+    const onPopState = () => {
+      const fromUrl = new URLSearchParams(window.location.search).get('q') ?? '';
+      if (fromUrl !== lastPushedRef.current) {
+        lastPushedRef.current = fromUrl.trim();
+        setQuery(fromUrl);
+      }
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
   }, []);
-
-  // Keep local input in sync when the user navigates with back/forward.
-  useEffect(() => {
-    setQuery(urlQuery);
-  }, [urlQuery]);
 
   // Push debounced value to the URL so searches are shareable.
   useEffect(() => {
@@ -87,25 +91,23 @@ export function useSearchState() {
     const params = new URLSearchParams(searchParams.toString());
     if (trimmed.length > 1) {
       params.set('q', trimmed);
-      addRecentSearch(trimmed);
-      setRecent(getRecentSearches());
+      lastPushedRef.current = trimmed;
     } else {
       params.delete('q');
+      lastPushedRef.current = '';
     }
     const qs = params.toString();
     router.replace(qs ? `/search?${qs}` : '/search', { scroll: false });
   }, [debouncedQuery, router, searchParams]);
 
-  const submitSearch = useCallback(
-    (term: string) => {
-      const trimmed = term.trim();
-      if (trimmed.length < 2) return;
-      setQuery(trimmed);
-      addRecentSearch(trimmed);
-      setRecent(getRecentSearches());
-    },
-    [],
-  );
+  const submitSearch = useCallback((term: string) => {
+    const trimmed = term.trim();
+    if (trimmed.length < 2) return;
+    lastPushedRef.current = trimmed;
+    setQuery(trimmed);
+    addRecentSearch(trimmed);
+    setRecent(getRecentSearches());
+  }, []);
 
   const clearRecent = useCallback(() => {
     clearRecentSearches();

@@ -2,9 +2,9 @@
 
 // Landing hero — live job counter (socket) + CTAs.
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import { motion, useSpring, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -13,16 +13,18 @@ import { useSocketEvent } from '@/hooks/useSocketEvent';
 import { env } from '@/config/runtime';
 import type { StatsUpdatePayload } from '@/types/socket';
 
-/** Animated number that springs toward the latest live count. */
+/** Brief scale pulse when the live count changes. */
 function AnimatedCounter({ value }: { value: number }) {
-  const spring = useSpring(value, { stiffness: 80, damping: 20 });
-  const display = useTransform(spring, (v) => Math.round(v).toLocaleString());
-
-  useEffect(() => {
-    spring.set(value);
-  }, [value, spring]);
-
-  return <motion.span>{display}</motion.span>;
+  return (
+    <motion.span
+      key={value}
+      initial={{ scale: 1.08, opacity: 0.85 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ duration: 0.35, ease: 'easeOut' }}
+    >
+      {value.toLocaleString()}
+    </motion.span>
+  );
 }
 
 /**
@@ -31,20 +33,14 @@ function AnimatedCounter({ value }: { value: number }) {
  */
 export function Hero() {
   const { data: overview, isLoading } = useOverview();
-  const [liveCount, setLiveCount] = useState<number | null>(null);
-
-  // Seed from REST; socket patches override between refetches.
-  useEffect(() => {
-    if (overview?.totalActiveJobs != null && liveCount === null) {
-      setLiveCount(overview.totalActiveJobs);
-    }
-  }, [overview?.totalActiveJobs, liveCount]);
+  const [socketCount, setSocketCount] = useState<number | undefined>();
 
   useSocketEvent('stats:update', (payload: StatsUpdatePayload) => {
-    setLiveCount(payload.totalActiveJobs);
+    setSocketCount(payload.totalActiveJobs);
   });
 
-  const count = liveCount ?? overview?.totalActiveJobs ?? 0;
+  const count = socketCount ?? overview?.totalActiveJobs ?? 0;
+  const waitingForCount = isLoading && overview === undefined && socketCount === undefined;
 
   return (
     <section className="relative overflow-hidden px-4 py-20 sm:py-28">
@@ -76,7 +72,7 @@ export function Hero() {
         </p>
 
         <div className="mt-10 flex flex-col items-center gap-2">
-          {isLoading && liveCount === null ? (
+          {waitingForCount ? (
             <Skeleton className="h-14 w-48" />
           ) : (
             <p className="text-5xl font-bold tabular-nums text-primary sm:text-6xl">

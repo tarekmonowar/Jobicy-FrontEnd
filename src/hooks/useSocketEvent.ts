@@ -15,7 +15,11 @@ export function useSocketEvent<E extends keyof ServerToClientEvents>(
   handler: ServerToClientEvents[E],
 ): void {
   const handlerRef = useRef(handler);
-  handlerRef.current = handler;
+
+  // Keep handler ref current without updating during render.
+  useEffect(() => {
+    handlerRef.current = handler;
+  });
 
   useEffect(() => {
     connectSocket();

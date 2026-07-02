@@ -2,7 +2,7 @@
 
 // Scrolling marquee of recent jobs — prepends on job:new socket events.
 
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Building2, MapPin } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -13,29 +13,31 @@ import type { JobNewPayload } from '@/types/socket';
 
 const MAX_TICKER_JOBS = 20;
 
+/** Merge socket-prepended jobs with the trending seed, deduped by id. */
+function mergeTickerJobs(prepended: JobCardDto[], trending: JobCardDto[]): JobCardDto[] {
+  const prependedIds = new Set(prepended.map((j) => j.id));
+  const base = trending.filter((j) => !prependedIds.has(j.id));
+  return [...prepended, ...base].slice(0, MAX_TICKER_JOBS);
+}
+
 /**
  * Horizontal ticker seeded from trending jobs; new ingestions prepend via `job:new`.
  */
 export function LiveTicker() {
-  const { data: trending, isLoading } = useTrending();
-  const [jobs, setJobs] = useState<JobCardDto[]>([]);
-
-  // Seed once trending data arrives.
-  useEffect(() => {
-    if (trending?.length && jobs.length === 0) {
-      setJobs(trending);
-    }
-  }, [trending, jobs.length]);
+  const { data: trending = [], isLoading } = useTrending();
+  const [prepended, setPrepended] = useState<JobCardDto[]>([]);
 
   // Prepend freshly ingested jobs (dedupe by id, cap list length).
   useSocketEvent('job:new', (payload: JobNewPayload) => {
     if (!payload.jobs?.length) return;
-    setJobs((prev) => {
+    setPrepended((prev) => {
       const incomingIds = new Set(payload.jobs.map((j) => j.id));
-      const rest = prev.filter((j) => !incomingIds.has(j.id));
+      const rest = [...prev, ...trending].filter((j) => !incomingIds.has(j.id));
       return [...payload.jobs, ...rest].slice(0, MAX_TICKER_JOBS);
     });
   });
+
+  const jobs = useMemo(() => mergeTickerJobs(prepended, trending), [prepended, trending]);
 
   if (isLoading && jobs.length === 0) {
     return (

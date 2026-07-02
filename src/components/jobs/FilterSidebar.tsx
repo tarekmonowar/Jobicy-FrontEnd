@@ -74,28 +74,39 @@ function toggleInArray<T>(current: T[] | undefined, value: T): T[] {
   return Array.from(set);
 }
 
+/** Debounced keyword field — remounts when URL `q` changes (browser back/forward). */
+function KeywordFilter({
+  urlQ,
+  onDebouncedChange,
+}: {
+  urlQ?: string;
+  onDebouncedChange: (q: string | undefined) => void;
+}) {
+  const [draft, setDraft] = useState(urlQ ?? '');
+  const debounced = useDebounce(draft, 400);
+
+  useEffect(() => {
+    const next = debounced.trim() || undefined;
+    if (next !== urlQ) {
+      onDebouncedChange(next);
+    }
+  }, [debounced, urlQ, onDebouncedChange]);
+
+  return (
+    <Input
+      id="filter-q"
+      placeholder="Title, company, skills…"
+      value={draft}
+      onChange={(e) => setDraft(e.target.value)}
+    />
+  );
+}
+
 /**
  * All job board filters — keyword is debounced before hitting the URL.
  */
 export function FilterSidebar({ filters, onChange, onReset, className }: FilterSidebarProps) {
-  const [keyword, setKeyword] = useState(filters.q ?? '');
   const [skillInput, setSkillInput] = useState('');
-  const debouncedKeyword = useDebounce(keyword, 400);
-
-  // Sync debounced keyword to URL
-  useEffect(() => {
-    const next = debouncedKeyword.trim() || undefined;
-    if (next !== filters.q) {
-      onChange({ q: next });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only react to debounced input
-  }, [debouncedKeyword]);
-
-  // Keep local keyword in sync when URL changes externally
-  useEffect(() => {
-    setKeyword(filters.q ?? '');
-  }, [filters.q]);
-
   const setRegion = (region: RegionFilter | undefined) => onChange({ region });
 
   const setWorkTypes = (locationType: LocationType[]) => {
@@ -178,14 +189,13 @@ export function FilterSidebar({ filters, onChange, onReset, className }: FilterS
         </div>
       </div>
 
-      {/* Keyword */}
+      {/* Keyword — key remounts input when URL q changes via browser navigation */}
       <div className="space-y-2">
         <Label htmlFor="filter-q">Keywords</Label>
-        <Input
-          id="filter-q"
-          placeholder="Title, company, skills…"
-          value={keyword}
-          onChange={(e) => setKeyword(e.target.value)}
+        <KeywordFilter
+          key={filters.q ?? '__empty__'}
+          urlQ={filters.q}
+          onDebouncedChange={(q) => onChange({ q })}
         />
       </div>
 

@@ -3,6 +3,7 @@
 // Search input with debounce and suggestion panel.
 
 import { useRef, useState, type FormEvent } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { SearchSuggestions } from '@/components/search/SearchSuggestions';
@@ -13,7 +14,10 @@ import { cn } from '@/lib/utils';
  * Controlled search field — debounces to URL `?q=` and shows recent/popular picks.
  */
 export function SearchBar() {
-  const { query, setQuery, recent, popular, submitSearch, clearRecent } = useSearchState();
+  const searchParams = useSearchParams();
+  const urlQuery = searchParams.get('q') ?? '';
+  const { query, setQuery, recent, popular, submitSearch, clearRecent } =
+    useSearchState(urlQuery);
   const [focused, setFocused] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
