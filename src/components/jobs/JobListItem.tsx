@@ -53,7 +53,7 @@ export function JobListItem({ job, selected, onSelect }: JobListItemProps) {
       className={cn(
         'relative cursor-pointer border-b px-4 py-3 transition-colors focus:outline-none',
         selected
-          ? 'bg-primary/5 before:absolute before:inset-y-0 before:left-0 before:w-[3px] before:bg-primary'
+          ? 'bg-primary/10 before:absolute before:inset-y-0 before:left-0 before:w-[3px] before:bg-primary'
           : 'hover:bg-muted/40 focus-visible:bg-muted/50',
       )}
     >

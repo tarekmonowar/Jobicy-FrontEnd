@@ -22,7 +22,10 @@ export function SimilarJobs({ jobId, limit = 3, className }: SimilarJobsProps) {
   const jobs = data?.slice(0, limit) ?? [];
 
   return (
-    <section className={cn('space-y-2', className)} aria-label="Similar jobs">
+    <section
+      className={cn('border-t border-border/50 pt-8 space-y-2', className)}
+      aria-label="Similar jobs"
+    >
       <h2 className="text-sm font-semibold tracking-tight">Similar jobs</h2>
 
       <div className="overflow-hidden rounded-md border">
