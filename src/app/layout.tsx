@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { Footer } from '@/components/ui/Footer';
 import { Navbar } from '@/components/ui/Navbar';
+import { PageTransition } from '@/components/ui/PageTransition';
+import { SkipToContent } from '@/components/ui/SkipToContent';
 import { env } from '@/config/runtime';
 import { Providers } from '@/app/providers';
 import './globals.css';
@@ -41,8 +43,13 @@ export default function RootLayout({
     >
       <body className="flex min-h-full flex-col">
         <Providers>
+          <SkipToContent />
           <Navbar />
-          <main className="flex-1">{children}</main>
+          <PageTransition>
+            <main id="main-content" className="flex-1 outline-none" tabIndex={-1}>
+              {children}
+            </main>
+          </PageTransition>
         </Providers>
         <Footer />
       </body>

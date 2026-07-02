@@ -56,7 +56,11 @@ export function JobCard({ job, badge }: JobCardProps) {
 
   return (
     <Card className="group relative gap-0 py-0 transition-shadow hover:shadow-md">
-      <Link href={`/jobs/${job.id}`} className="block">
+      <Link
+        href={`/jobs/${job.id}`}
+        className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        aria-label={`View ${job.title} at ${job.company}`}
+      >
         {/* Top section: source, status, title, salary */}
         <CardContent className="space-y-3 border-b px-4 py-4">
           <div className="flex items-start justify-between gap-2">

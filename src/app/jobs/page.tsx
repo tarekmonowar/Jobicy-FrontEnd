@@ -51,22 +51,28 @@ function JobsBoardContent() {
           />
         </div>
 
-        {/* Mobile drawer */}
+        {/* Mobile drawer — slide-over filter panel */}
         {mobileFiltersOpen && (
-          <div className="fixed inset-0 z-50 lg:hidden">
+          <div className="fixed inset-0 z-50 lg:hidden" role="presentation">
             <button
               type="button"
               className="absolute inset-0 bg-black/40"
               onClick={() => setMobileFiltersOpen(false)}
-              aria-label="Close filters"
+              aria-label="Close filters overlay"
             />
-            <div className="absolute inset-y-0 left-0 w-[min(100%,20rem)] overflow-y-auto bg-background p-4 shadow-xl">
+            <div
+              className="absolute inset-y-0 left-0 w-[min(100%,20rem)] overflow-y-auto bg-background p-4 shadow-xl"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Job filters"
+            >
               <div className="mb-4 flex justify-end">
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
                   onClick={() => setMobileFiltersOpen(false)}
+                  aria-label="Close filters"
                 >
                   <PanelLeftClose className="size-4" />
                 </Button>
@@ -76,7 +82,7 @@ function JobsBoardContent() {
           </div>
         )}
 
-        <main className="min-w-0 flex-1 space-y-4">
+        <main className="min-w-0 flex-1 space-y-4" aria-label="Job listings">
           <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-card px-4 py-3">
             <SortDropdown value={sort} onChange={(s) => setFilter({ sort: s })} />
           </div>

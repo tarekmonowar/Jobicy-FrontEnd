@@ -112,7 +112,7 @@ export default function JobDetailPage({ params }: PageProps) {
           </p>
         </div>
 
-        <aside className="space-y-4">
+        <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start" aria-label="Job sidebar">
           <CompanyPanel job={job} />
           <MarketInsight insight={job.marketInsight} />
           <SimilarJobs jobId={job.id} />

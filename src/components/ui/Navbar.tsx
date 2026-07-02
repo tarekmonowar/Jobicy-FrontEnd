@@ -53,12 +53,18 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-4 sm:px-6">
-        <Link href="/" className="shrink-0 text-lg font-bold text-primary">
+        <Link
+          href="/"
+          className="shrink-0 text-lg font-bold text-primary focus-visible:rounded-md"
+        >
           {env.appName}
         </Link>
 
         {/* Desktop nav — center area */}
-        <nav className="hidden flex-1 items-center gap-1 md:flex">
+        <nav
+          className="hidden flex-1 items-center gap-1 md:flex"
+          aria-label="Main navigation"
+        >
           {visibleLinks.map((link) => (
             <Link
               key={link.href}
@@ -149,6 +155,8 @@ export function Navbar() {
             className="md:hidden"
             onClick={() => setMobileOpen((o) => !o)}
             aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-nav"
           >
             {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
           </Button>
@@ -157,7 +165,11 @@ export function Navbar() {
 
       {/* Mobile drawer */}
       {mobileOpen && (
-        <nav className="border-t px-4 py-3 md:hidden">
+        <nav
+          id="mobile-nav"
+          className="border-t px-4 py-3 md:hidden"
+          aria-label="Mobile navigation"
+        >
           <div className="flex flex-col gap-1">
             {visibleLinks.map((link) => (
               <Link

@@ -58,6 +58,7 @@ export function SaveButton({ jobId, isSaved, className }: SaveButtonProps) {
           'size-4 transition-colors',
           isSaved ? 'fill-destructive text-destructive' : 'text-muted-foreground',
         )}
+        aria-hidden
       />
     </Button>
   );
