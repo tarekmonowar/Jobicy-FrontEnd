@@ -1,6 +1,6 @@
 // Company details panel on the job detail page (no logo).
 
-import { Building2, Globe, Linkedin, MapPin } from 'lucide-react';
+import { Building2, Globe, Link2, MapPin } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { JobDetailDto } from '@/types/job';
 
@@ -56,7 +56,7 @@ export function CompanyPanel({ job }: CompanyPanelProps) {
             rel="noopener noreferrer"
             className="flex items-center gap-2 text-primary hover:underline"
           >
-            <Linkedin className="size-4 shrink-0" aria-hidden />
+            <Link2 className="size-4 shrink-0" aria-hidden />
             <span className="truncate">LinkedIn</span>
           </a>
         )}
