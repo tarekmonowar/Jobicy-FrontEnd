@@ -1,6 +1,6 @@
 // Alert types — mirror plan/02-api-contracts.md §5.
 
-import type { JobType } from '@/types/job';
+import type { JobType, LocationType } from '@/types/job';
 
 export type AlertFrequency = 'INSTANT' | 'DAILY' | 'WEEKLY';
 
@@ -10,7 +10,7 @@ export type AlertDto = {
   skills: string[];
   location: string | null;
   jobType: JobType | null;
-  salaryMin: number | null;
+  locationType: LocationType | null;
   frequency: AlertFrequency;
   isActive: boolean;
   createdAt: string;

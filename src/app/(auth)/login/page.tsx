@@ -31,7 +31,7 @@ import toast from 'react-hot-toast';
 /** Centered auth card shell shared by this page's layout. */
 function AuthShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center px-4 py-12">
+    <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center bg-muted/30 px-4 py-12">
       {children}
     </div>
   );
@@ -106,23 +106,25 @@ function LoginForm() {
 
   return (
     <AuthShell>
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Welcome back</CardTitle>
+      <Card className="w-full max-w-md shadow-md">
+        <CardHeader className="space-y-1 pb-2">
+          <CardTitle className="text-2xl">Welcome back</CardTitle>
           <CardDescription>Sign in to your Jobicy account</CardDescription>
         </CardHeader>
         <form
           method="post"
+          className="flex flex-col"
           onSubmit={(e) => {
             e.preventDefault();
             void handleSubmit(onSubmit, toastFormErrors)(e);
           }}
           noValidate
         >
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-5 pb-6">
             {submitError && <FormAlert message={submitError} variant="error" />}
+
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
+              <label htmlFor="email" className="text-sm font-medium leading-none">
                 Email
               </label>
               <Input
@@ -132,15 +134,17 @@ function LoginForm() {
                 placeholder="you@example.com"
                 disabled={isLoginPending}
                 aria-invalid={!!errors.email}
+                className="h-11 bg-background"
                 {...register('email')}
               />
               {errors.email && (
                 <p className="text-sm text-destructive">{errors.email.message}</p>
               )}
             </div>
+
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label htmlFor="password" className="text-sm font-medium">
+              <div className="flex items-center justify-between gap-2">
+                <label htmlFor="password" className="text-sm font-medium leading-none">
                   Password
                 </label>
                 <Link
@@ -154,17 +158,23 @@ function LoginForm() {
                 id="password"
                 type="password"
                 autoComplete="current-password"
+                placeholder="Enter your password"
                 disabled={isLoginPending}
                 aria-invalid={!!errors.password}
+                className="h-11 bg-background"
                 {...register('password')}
               />
               {errors.password && (
                 <p className="text-sm text-destructive">{errors.password.message}</p>
               )}
             </div>
-          </CardContent>
-          <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full" disabled={isLoginPending}>
+
+            <Button
+              type="submit"
+              size="lg"
+              className="mt-1 h-11 w-full"
+              disabled={isLoginPending}
+            >
               {isLoginPending ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
@@ -174,6 +184,9 @@ function LoginForm() {
                 'Sign in'
               )}
             </Button>
+          </CardContent>
+
+          <CardFooter className="justify-center border-t bg-muted/20 py-5">
             <p className="text-center text-sm text-muted-foreground">
               Don&apos;t have an account?{' '}
               <Link

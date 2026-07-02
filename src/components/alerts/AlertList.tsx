@@ -37,7 +37,7 @@ export function AlertList() {
     return (
       <EmptyState
         title="No alerts yet"
-        message="Create an alert above to get emailed when new jobs match your criteria."
+        message="Create an alert on the left to get emailed when new jobs match your criteria."
       />
     );
   }

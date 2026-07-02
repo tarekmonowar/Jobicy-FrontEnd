@@ -26,6 +26,14 @@ import {
 
 const FORGOT_SUCCESS_KEY = 'jobicy_forgot_success_email';
 
+function AuthShell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center bg-muted/30 px-4 py-12">
+      {children}
+    </div>
+  );
+}
+
 /** Request a password-reset email — shows a generic success message either way. */
 export default function ForgotPasswordPage() {
   const { forgotPassword, isForgotPending } = useAuth();
@@ -59,18 +67,18 @@ export default function ForgotPasswordPage() {
 
   if (submittedEmail) {
     return (
-      <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center px-4 py-12">
-        <Card className="w-full max-w-md text-center">
-          <CardHeader>
-            <div className="mx-auto mb-2 flex size-14 items-center justify-center rounded-full bg-primary/10">
+      <AuthShell>
+        <Card className="w-full max-w-md text-center shadow-md">
+          <CardHeader className="space-y-3 pb-2">
+            <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-primary/10">
               <Mail className="size-7 text-primary" />
             </div>
-            <CardTitle className="text-xl">Check your inbox</CardTitle>
+            <CardTitle className="text-2xl">Check your inbox</CardTitle>
             <CardDescription>
               If an account exists for this address, we sent a password reset link.
             </CardDescription>
             <div className="space-y-3 pt-1 text-left text-sm text-muted-foreground">
-              <p className="flex items-center gap-2 rounded-md border bg-muted/50 px-3 py-2 font-medium text-foreground">
+              <p className="flex items-center gap-2 rounded-md border bg-muted/50 px-3 py-2.5 font-medium text-foreground">
                 <Mail className="size-4 shrink-0 text-primary" />
                 {submittedEmail}
               </p>
@@ -80,8 +88,8 @@ export default function ForgotPasswordPage() {
               </p>
             </div>
           </CardHeader>
-          <CardFooter className="flex flex-col gap-2">
-            <Button variant="outline" asChild className="w-full">
+          <CardFooter className="flex flex-col gap-3 border-t bg-muted/20 py-5">
+            <Button variant="outline" asChild className="h-11 w-full">
               <Link
                 href="/login"
                 onClick={() => sessionStorage.removeItem(FORGOT_SUCCESS_KEY)}
@@ -102,27 +110,28 @@ export default function ForgotPasswordPage() {
             </Button>
           </CardFooter>
         </Card>
-      </div>
+      </AuthShell>
     );
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center px-4 py-12">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Forgot password?</CardTitle>
+    <AuthShell>
+      <Card className="w-full max-w-md shadow-md">
+        <CardHeader className="space-y-1 pb-2">
+          <CardTitle className="text-2xl">Forgot password?</CardTitle>
           <CardDescription>
             Enter your email and we&apos;ll send you a link to reset your password
           </CardDescription>
         </CardHeader>
         <form
           method="post"
+          className="flex flex-col"
           onSubmit={handleSubmit(onSubmit, toastFormErrors)}
           noValidate
         >
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-5 pb-6">
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
+              <label htmlFor="email" className="text-sm font-medium leading-none">
                 Email
               </label>
               <Input
@@ -132,15 +141,20 @@ export default function ForgotPasswordPage() {
                 placeholder="you@example.com"
                 disabled={isForgotPending}
                 aria-invalid={!!errors.email}
+                className="h-11 bg-background"
                 {...registerField('email')}
               />
               {errors.email && (
                 <p className="text-sm text-destructive">{errors.email.message}</p>
               )}
             </div>
-          </CardContent>
-          <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full" disabled={isForgotPending}>
+
+            <Button
+              type="submit"
+              size="lg"
+              className="mt-1 h-11 w-full"
+              disabled={isForgotPending}
+            >
               {isForgotPending ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
@@ -150,6 +164,9 @@ export default function ForgotPasswordPage() {
                 'Send reset link'
               )}
             </Button>
+          </CardContent>
+
+          <CardFooter className="justify-center border-t bg-muted/20 py-5">
             <p className="text-center text-sm text-muted-foreground">
               Remember your password?{' '}
               <Link href="/login" className="font-medium text-primary hover:underline">
@@ -159,6 +176,6 @@ export default function ForgotPasswordPage() {
           </CardFooter>
         </form>
       </Card>
-    </div>
+    </AuthShell>
   );
 }

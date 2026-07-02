@@ -41,6 +41,12 @@ const JOB_TYPE_LABELS: Record<string, string> = {
   INTERNSHIP: 'Internship',
 };
 
+const LOCATION_TYPE_LABELS: Record<string, string> = {
+  REMOTE: 'Remote',
+  ONSITE: 'Onsite',
+  HYBRID: 'Hybrid',
+};
+
 /**
  * Card for one job alert — owner actions: enable/disable, test, preview, edit, delete.
  */
@@ -107,8 +113,8 @@ export function AlertCard({ alert }: AlertCardProps) {
             {alert.jobType && (
               <Badge variant="outline">{JOB_TYPE_LABELS[alert.jobType]}</Badge>
             )}
-            {alert.salaryMin != null && (
-              <Badge variant="outline">Min {alert.salaryMin.toLocaleString()}</Badge>
+            {alert.locationType && (
+              <Badge variant="outline">{LOCATION_TYPE_LABELS[alert.locationType]}</Badge>
             )}
           </div>
 
