@@ -1,4 +1,6 @@
 // Reads NEXT_PUBLIC_* env vars once at module load.
+// Must use static process.env.NEXT_PUBLIC_* access so Next/Vercel inlines values at build time.
+// Dynamic process.env[key] is NOT replaced in the browser bundle.
 
 const DEV_DEFAULTS = {
   NEXT_PUBLIC_API_URL: 'http://localhost:4000/api/v1',
@@ -7,8 +9,11 @@ const DEV_DEFAULTS = {
 
 type RequiredKey = keyof typeof DEV_DEFAULTS;
 
-function requireEnv(key: RequiredKey): string {
-  const value = (process.env[key]?.split('#')[0] ?? '').trim();
+function readEnv(
+  raw: string | undefined,
+  key: RequiredKey,
+): string {
+  const value = (raw?.split('#')[0] ?? '').trim();
   if (value) {
     return value;
   }
@@ -22,8 +27,8 @@ function requireEnv(key: RequiredKey): string {
 
 /** Typed public runtime config consumed by the API layer, socket, and UI helpers. */
 export const env = {
-  apiUrl: requireEnv('NEXT_PUBLIC_API_URL'),
-  socketUrl: requireEnv('NEXT_PUBLIC_SOCKET_URL'),
+  apiUrl: readEnv(process.env.NEXT_PUBLIC_API_URL, 'NEXT_PUBLIC_API_URL'),
+  socketUrl: readEnv(process.env.NEXT_PUBLIC_SOCKET_URL, 'NEXT_PUBLIC_SOCKET_URL'),
   usdToBdt: Number(process.env.NEXT_PUBLIC_USD_TO_BDT ?? 120),
   appName: (process.env.NEXT_PUBLIC_APP_NAME ?? 'Joblens').trim() || 'Joblens',
 };
