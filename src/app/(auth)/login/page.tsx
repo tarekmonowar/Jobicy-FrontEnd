@@ -18,6 +18,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/auth/PasswordInput';
 import { env } from '@/config/runtime';
 import {
   getApiErrorMessage,
@@ -147,9 +148,8 @@ function LoginForm() {
                   Forgot password?
                 </Link>
               </div>
-              <Input
+              <PasswordInput
                 id="password"
-                type="password"
                 autoComplete="current-password"
                 placeholder="Enter your password"
                 disabled={isLoginPending}

@@ -18,6 +18,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/auth/PasswordInput';
 import { env } from '@/config/runtime';
 import {
   getApiErrorMessage,
@@ -206,12 +207,13 @@ export default function RegisterPage() {
               <label htmlFor="password" className="text-sm font-medium">
                 Password
               </label>
-              <Input
+              <PasswordInput
                 id="password"
-                type="password"
                 autoComplete="new-password"
+                placeholder="Create a password"
                 disabled={isRegisterPending}
                 aria-invalid={!!errors.password}
+                className="h-11 bg-background"
                 {...registerField('password')}
               />
               {errors.password && (
