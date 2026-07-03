@@ -25,7 +25,7 @@ import {
 } from '@/hooks/useAuth';
 import { AuthShell } from '@/components/auth/AuthShell';
 
-const FORGOT_SUCCESS_KEY = 'jobicy_forgot_success_email';
+const FORGOT_SUCCESS_KEY = 'joblens_forgot_success_email';
 
 /** Request a password-reset email — shows a generic success message either way. */
 export default function ForgotPasswordPage() {

@@ -26,13 +26,13 @@ export function useFetchLogs(page = 1) {
   });
 }
 
-/** BullMQ queue job counts — auto-refreshes every 10 seconds. */
+/** BullMQ queue job counts — auto-refreshes every 30 seconds. */
 export function useQueues() {
   return useQuery({
     queryKey: queryKeys.admin.queues(),
     queryFn: () => adminApi.getQueues(),
-    refetchInterval: 10_000,
-    staleTime: 5_000,
+    refetchInterval: 30_000,
+    staleTime: 20_000,
   });
 }
 

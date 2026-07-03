@@ -34,5 +34,5 @@ export const env = {
   apiUrl: requireEnv('NEXT_PUBLIC_API_URL'),
   socketUrl: requireEnv('NEXT_PUBLIC_SOCKET_URL'),
   usdToBdt: Number(process.env.NEXT_PUBLIC_USD_TO_BDT ?? 120),
-  appName: process.env.NEXT_PUBLIC_APP_NAME ?? 'Jobicy',
+  appName: process.env.NEXT_PUBLIC_APP_NAME ?? 'Joblens',
 };

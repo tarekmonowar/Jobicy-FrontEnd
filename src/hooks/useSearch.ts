@@ -9,7 +9,7 @@ import * as jobsApi from '@/lib/api/jobsApi';
 import { queryKeys } from '@/lib/queryClient';
 import { useDebounce } from '@/hooks/useDebounce';
 
-const RECENT_STORAGE_KEY = 'jobicy_recent_searches';
+const RECENT_STORAGE_KEY = 'joblens_recent_searches';
 const MAX_RECENT = 8;
 
 /** Curated popular queries shown when the search box is empty. */

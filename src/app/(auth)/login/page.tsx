@@ -18,6 +18,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { env } from '@/config/runtime';
 import {
   getApiErrorMessage,
   loginSchema,
@@ -101,7 +102,7 @@ function LoginForm() {
       <Card className="w-full max-w-md shadow-md">
         <CardHeader className="space-y-1 pb-2">
           <CardTitle className="text-2xl">Welcome back</CardTitle>
-          <CardDescription>Sign in to your Jobicy account</CardDescription>
+          <CardDescription>Sign in to your {env.appName} account</CardDescription>
         </CardHeader>
         <form
           method="post"

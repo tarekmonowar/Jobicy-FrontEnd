@@ -18,6 +18,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { env } from '@/config/runtime';
 import {
   getApiErrorMessage,
   registerSchema,
@@ -29,7 +30,7 @@ import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import { AuthShell } from '@/components/auth/AuthShell';
 
-const REGISTER_SUCCESS_KEY = 'jobicy_register_success_email';
+const REGISTER_SUCCESS_KEY = 'joblens_register_success_email';
 
 /** Inline alert — visible even if toast notifications fail to render. */
 function FormAlert({ message, variant }: { message: string; variant: 'error' | 'success' }) {
@@ -155,7 +156,7 @@ export default function RegisterPage() {
         <CardHeader>
           <CardTitle>Create an account</CardTitle>
           <CardDescription>
-            Join Jobicy to save jobs, set alerts, and track applications
+            Join {env.appName} to save jobs, set alerts, and track applications
           </CardDescription>
         </CardHeader>
         <form

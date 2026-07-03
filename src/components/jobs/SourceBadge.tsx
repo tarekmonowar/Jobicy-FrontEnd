@@ -79,7 +79,7 @@ function SourceIcon({ source }: { source: JobSource }) {
 }
 
 /**
- * Shows the job provider. For OTHER, falls back to sourceName (Jobicy, Remote Jobs, etc.).
+ * Shows the job provider. For OTHER, falls back to sourceName (jobicy.com, Remote Jobs, etc.).
  */
 export function SourceBadge({ source, sourceName, prominent = false }: SourceBadgeProps) {
   const label =

@@ -43,7 +43,7 @@ function QueueRow({ queue }: QueueRowProps) {
 }
 
 /**
- * Live BullMQ queue status — refetches every 10 seconds via useQueues.
+ * Live BullMQ queue status — refetches every 30 seconds via useQueues.
  */
 export function QueueMonitor() {
   const { data, isLoading, isError, refetch, isFetching } = useQueues();

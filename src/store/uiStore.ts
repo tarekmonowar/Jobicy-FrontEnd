@@ -30,7 +30,7 @@ export const useUiStore = create<UiStore>()(
       toggleSidebar: () => set({ sidebarOpen: !get().sidebarOpen }),
     }),
     {
-      name: 'jobicy-ui',
+      name: 'joblens-ui',
       partialize: (state) => ({
         currency: state.currency,
         savedView: state.savedView,
