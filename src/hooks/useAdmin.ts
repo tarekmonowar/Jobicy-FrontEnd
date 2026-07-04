@@ -22,17 +22,17 @@ export function useFetchLogs(page = 1) {
   return useQuery({
     queryKey: queryKeys.admin.fetchLogs(page),
     queryFn: () => adminApi.getFetchLogs(page),
-    staleTime: 30_000,
+    staleTime: 60_000,
   });
 }
 
-/** BullMQ queue job counts — auto-refreshes every 30 seconds. */
+/** BullMQ queue job counts — auto-refreshes every 2 minutes (admin-only, saves Redis). */
 export function useQueues() {
   return useQuery({
     queryKey: queryKeys.admin.queues(),
     queryFn: () => adminApi.getQueues(),
-    refetchInterval: 30_000,
-    staleTime: 20_000,
+    refetchInterval: 120_000,
+    staleTime: 120_000,
   });
 }
 

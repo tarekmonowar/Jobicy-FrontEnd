@@ -1,6 +1,6 @@
 'use client';
 
-// BullMQ queue monitor — live job counts with auto-refresh every 10s.
+// BullMQ queue monitor — refreshes every 2 minutes; use Refresh for immediate update.
 
 import { RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -43,7 +43,7 @@ function QueueRow({ queue }: QueueRowProps) {
 }
 
 /**
- * Live BullMQ queue status — refetches every 30 seconds via useQueues.
+ * BullMQ queue status — refetches every 2 minutes via useQueues (manual refresh available).
  */
 export function QueueMonitor() {
   const { data, isLoading, isError, refetch, isFetching } = useQueues();
@@ -78,7 +78,7 @@ export function QueueMonitor() {
             className={`size-3.5 ${isFetching ? 'animate-spin' : ''}`}
             aria-hidden
           />
-          Auto-refresh 10s
+          Auto-refresh 2 min
         </span>
       </CardHeader>
       <CardContent className="space-y-3">
