@@ -8,6 +8,7 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import * as jobsApi from '@/lib/api/jobsApi';
 import { queryKeys } from '@/lib/queryClient';
 import { useDebounce } from '@/hooks/useDebounce';
+import { useAuthStore } from '@/store/authStore';
 
 const RECENT_STORAGE_KEY = 'joblens_recent_searches';
 const MAX_RECENT = 8;
@@ -130,6 +131,7 @@ export function useSearchState(initialQuery: string) {
  */
 export function useSearch(q: string) {
   const trimmed = q.trim();
+  const authStatus = useAuthStore((s) => s.status);
 
   return useInfiniteQuery({
     queryKey: queryKeys.search(trimmed),
@@ -137,6 +139,6 @@ export function useSearch(q: string) {
     initialPageParam: 1,
     getNextPageParam: (lastPage) =>
       lastPage.meta.hasNext ? lastPage.meta.page + 1 : undefined,
-    enabled: trimmed.length > 1,
+    enabled: trimmed.length > 1 && authStatus !== 'idle',
   });
 }

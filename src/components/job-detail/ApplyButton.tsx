@@ -32,7 +32,9 @@ export function ApplyButton({ job }: ApplyButtonProps) {
   }
 
   const handleApply = () => {
-    if (status !== 'authed') {
+    if (status === 'idle') return;
+
+    if (status === 'guest') {
       toast.error('Sign in to track applications');
       router.push(`/login?next=${encodeURIComponent(window.location.pathname)}`);
       return;
@@ -45,7 +47,7 @@ export function ApplyButton({ job }: ApplyButtonProps) {
     <Button
       size="lg"
       onClick={handleApply}
-      disabled={applyMutation.isPending}
+      disabled={applyMutation.isPending || status === 'idle'}
       className="gap-2"
     >
       Apply

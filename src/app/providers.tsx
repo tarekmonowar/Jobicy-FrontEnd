@@ -24,7 +24,14 @@ export function Providers({ children }: ProvidersProps) {
   const bootstrap = useAuthStore((s) => s.bootstrap);
 
   useEffect(() => {
-    void bootstrap();
+    void bootstrap().then(() => {
+      if (useAuthStore.getState().status === 'authed') {
+        void queryClient.invalidateQueries({ queryKey: ['jobs'] });
+        void queryClient.invalidateQueries({ queryKey: ['job'] });
+        void queryClient.invalidateQueries({ queryKey: queryKeys.saved() });
+        void queryClient.invalidateQueries({ queryKey: queryKeys.applied() });
+      }
+    });
     try {
       connectSocket();
     } catch {

@@ -7,49 +7,25 @@ import { isAxiosError } from 'axios';
 import toast from 'react-hot-toast';
 import * as applicationsApi from '@/lib/api/applicationsApi';
 import { queryKeys } from '@/lib/queryClient';
+import {
+  patchJobFlagsInCache,
+  removeFromAppliedListCache,
+  restoreJobFlagCaches,
+  snapshotJobFlagCaches,
+} from '@/lib/patchJobCache';
 import { getApiErrorMessage } from '@/hooks/useAuth';
+import { useAuthStore } from '@/store/authStore';
 import type { ApiError } from '@/types/api';
-import type { JobCardDto, JobDetailDto } from '@/types/job';
-import type { InfiniteData } from '@tanstack/react-query';
-import type { PaginatedMeta } from '@/types/api';
+import type { AppliedJobDto } from '@/types/application';
 
-type JobsPage = { data: JobCardDto[]; meta: PaginatedMeta };
-type JobsInfinite = InfiniteData<JobsPage>;
-
-/** Patch isApplied across cached job queries. */
-function patchJobAppliedFlags(
-  queryClient: ReturnType<typeof useQueryClient>,
-  jobId: string,
-  isApplied: boolean,
-) {
-  queryClient.setQueryData<JobDetailDto>(queryKeys.job(jobId), (old) =>
-    old ? { ...old, isApplied } : old,
-  );
-
-  queryClient.setQueriesData<JobsInfinite>({ queryKey: ['jobs'] }, (old) => {
-    if (!old) return old;
-    return {
-      ...old,
-      pages: old.pages.map((page) => ({
-        ...page,
-        data: page.data.map((j) => (j.id === jobId ? { ...j, isApplied } : j)),
-      })),
-    };
-  });
-
-  queryClient.setQueryData<JobCardDto[]>(queryKeys.trending(), (old) =>
-    old?.map((j) => (j.id === jobId ? { ...j, isApplied } : j)),
-  );
-  queryClient.setQueriesData<JobCardDto[]>({ queryKey: ['similar'] }, (old) =>
-    old?.map((j) => (j.id === jobId ? { ...j, isApplied } : j)),
-  );
-}
-
-/** List jobs the user marked as applied. */
+/** List jobs the user marked as applied (waits for auth bootstrap). */
 export function useApplied() {
+  const authStatus = useAuthStore((s) => s.status);
+
   return useQuery({
     queryKey: queryKeys.applied(),
     queryFn: () => applicationsApi.getApplied(),
+    enabled: authStatus === 'authed',
   });
 }
 
@@ -62,27 +38,22 @@ export function useApply() {
   return useMutation({
     mutationFn: ({ jobId }: { jobId: string; sourceUrl: string }) =>
       applicationsApi.apply(jobId),
-    onMutate: async ({ jobId }) => {
+    onMutate: async ({ jobId, sourceUrl }) => {
       await queryClient.cancelQueries({ queryKey: ['jobs'] });
-      const previousLists = queryClient.getQueriesData({ queryKey: ['jobs'] });
-      const previousDetail = queryClient.getQueryData(queryKeys.job(jobId));
-      patchJobAppliedFlags(queryClient, jobId, true);
-      return { previousLists, previousDetail, jobId };
+      const snapshots = snapshotJobFlagCaches(queryClient, jobId);
+      patchJobFlagsInCache(queryClient, jobId, { isApplied: true });
+      return { snapshots, jobId, sourceUrl };
     },
     onError: (error, { jobId }, context) => {
-      if (context?.previousLists) {
-        for (const [key, data] of context.previousLists) {
-          queryClient.setQueryData(key, data);
-        }
-      }
-      if (context?.previousDetail !== undefined) {
-        queryClient.setQueryData(queryKeys.job(jobId), context.previousDetail);
+      if (context?.snapshots) {
+        restoreJobFlagCaches(queryClient, context.snapshots);
       }
       const code = isAxiosError<ApiError>(error)
         ? error.response?.data?.error?.code
         : undefined;
       if (code === 'ALREADY_APPLIED') {
         toast.error('You already applied to this job');
+        patchJobFlagsInCache(queryClient, jobId, { isApplied: true });
       } else {
         toast.error(getApiErrorMessage(error, 'Could not record application'));
       }
@@ -102,17 +73,20 @@ export function useUnapply() {
   return useMutation({
     mutationFn: (jobId: string) => applicationsApi.unapply(jobId),
     onMutate: async (jobId) => {
-      const previousApplied = queryClient.getQueryData(queryKeys.applied());
-      const previousDetail = queryClient.getQueryData(queryKeys.job(jobId));
-      patchJobAppliedFlags(queryClient, jobId, false);
-      return { previousApplied, previousDetail, jobId };
+      const snapshots = snapshotJobFlagCaches(queryClient, jobId);
+      const previousApplied = queryClient.getQueryData<AppliedJobDto[]>(
+        queryKeys.applied(),
+      );
+      patchJobFlagsInCache(queryClient, jobId, { isApplied: false });
+      removeFromAppliedListCache(queryClient, jobId);
+      return { snapshots, previousApplied, jobId };
     },
-    onError: (_error, jobId, context) => {
+    onError: (_error, _jobId, context) => {
+      if (context?.snapshots) {
+        restoreJobFlagCaches(queryClient, context.snapshots);
+      }
       if (context?.previousApplied !== undefined) {
         queryClient.setQueryData(queryKeys.applied(), context.previousApplied);
-      }
-      if (context?.previousDetail !== undefined) {
-        queryClient.setQueryData(queryKeys.job(jobId), context.previousDetail);
       }
       toast.error('Could not remove application');
     },

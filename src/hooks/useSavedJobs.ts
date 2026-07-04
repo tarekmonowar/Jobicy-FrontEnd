@@ -7,60 +7,26 @@ import { isAxiosError } from 'axios';
 import toast from 'react-hot-toast';
 import * as savedApi from '@/lib/api/savedApi';
 import { queryKeys } from '@/lib/queryClient';
+import {
+  patchJobFlagsInCache,
+  removeFromSavedListCache,
+  restoreJobFlagCaches,
+  restoreSavedListCaches,
+  snapshotJobFlagCaches,
+  snapshotSavedListCaches,
+} from '@/lib/patchJobCache';
 import { getApiErrorMessage } from '@/hooks/useAuth';
+import { useAuthStore } from '@/store/authStore';
 import type { ApiError } from '@/types/api';
-import type { JobCardDto, JobDetailDto } from '@/types/job';
-import type { InfiniteData } from '@tanstack/react-query';
-import type { PaginatedMeta } from '@/types/api';
 
-type JobsPage = { data: JobCardDto[]; meta: PaginatedMeta };
-type JobsInfinite = InfiniteData<JobsPage>;
-
-/** Patch isSaved on every cached job list + detail entry. */
-function patchJobSavedFlags(
-  queryClient: ReturnType<typeof useQueryClient>,
-  jobId: string,
-  isSaved: boolean,
-) {
-  // Detail cache
-  queryClient.setQueryData<JobDetailDto>(queryKeys.job(jobId), (old) =>
-    old ? { ...old, isSaved } : old,
-  );
-
-  // All infinite job lists
-  queryClient.setQueriesData<JobsInfinite>({ queryKey: ['jobs'] }, (old) => {
-    if (!old) return old;
-    return {
-      ...old,
-      pages: old.pages.map((page) => ({
-        ...page,
-        data: page.data.map((j) => (j.id === jobId ? { ...j, isSaved } : j)),
-      })),
-    };
-  });
-
-  // Trending / similar / search caches
-  const patchArray = (key: readonly unknown[]) => {
-    queryClient.setQueryData<JobCardDto[]>(key, (old) =>
-      old?.map((j) => (j.id === jobId ? { ...j, isSaved } : j)),
-    );
-  };
-  patchArray(queryKeys.trending());
-  queryClient.setQueriesData<JobCardDto[]>({ queryKey: ['similar'] }, (old) =>
-    old?.map((j) => (j.id === jobId ? { ...j, isSaved } : j)),
-  );
-  queryClient.setQueriesData<JobsPage>({ queryKey: ['search'] }, (old) =>
-    old
-      ? { ...old, data: old.data.map((j) => (j.id === jobId ? { ...j, isSaved } : j)) }
-      : old,
-  );
-}
-
-/** List the user's saved jobs. */
+/** List the user's saved jobs (waits for auth bootstrap). */
 export function useSaved(sort?: string) {
+  const authStatus = useAuthStore((s) => s.status);
+
   return useQuery({
     queryKey: [...queryKeys.saved(), sort ?? 'latest'],
     queryFn: () => savedApi.getSaved(sort),
+    enabled: authStatus === 'authed',
   });
 }
 
@@ -73,25 +39,20 @@ export function useSaveJob() {
       savedApi.save(jobId, note),
     onMutate: async ({ jobId }) => {
       await queryClient.cancelQueries({ queryKey: ['jobs'] });
-      const previousLists = queryClient.getQueriesData({ queryKey: ['jobs'] });
-      const previousDetail = queryClient.getQueryData(queryKeys.job(jobId));
-      patchJobSavedFlags(queryClient, jobId, true);
-      return { previousLists, previousDetail, jobId };
+      const snapshots = snapshotJobFlagCaches(queryClient, jobId);
+      patchJobFlagsInCache(queryClient, jobId, { isSaved: true });
+      return { snapshots, jobId };
     },
     onError: (error, { jobId }, context) => {
-      if (context?.previousLists) {
-        for (const [key, data] of context.previousLists) {
-          queryClient.setQueryData(key, data);
-        }
-      }
-      if (context?.previousDetail !== undefined) {
-        queryClient.setQueryData(queryKeys.job(jobId), context.previousDetail);
+      if (context?.snapshots) {
+        restoreJobFlagCaches(queryClient, context.snapshots);
       }
       const code = isAxiosError<ApiError>(error)
         ? error.response?.data?.error?.code
         : undefined;
       if (code === 'ALREADY_SAVED') {
         toast.error('Job already saved');
+        patchJobFlagsInCache(queryClient, jobId, { isSaved: true });
       } else {
         toast.error(getApiErrorMessage(error, 'Could not save job'));
       }
@@ -111,23 +72,18 @@ export function useUnsaveJob() {
     mutationFn: (jobId: string) => savedApi.unsave(jobId),
     onMutate: async (jobId) => {
       await queryClient.cancelQueries({ queryKey: ['jobs'] });
-      const previousLists = queryClient.getQueriesData({ queryKey: ['jobs'] });
-      const previousDetail = queryClient.getQueryData(queryKeys.job(jobId));
-      const previousSaved = queryClient.getQueryData(queryKeys.saved());
-      patchJobSavedFlags(queryClient, jobId, false);
-      return { previousLists, previousDetail, previousSaved, jobId };
+      const snapshots = snapshotJobFlagCaches(queryClient, jobId);
+      const savedSnapshots = snapshotSavedListCaches(queryClient);
+      patchJobFlagsInCache(queryClient, jobId, { isSaved: false });
+      removeFromSavedListCache(queryClient, jobId);
+      return { snapshots, savedSnapshots, jobId };
     },
-    onError: (_error, jobId, context) => {
-      if (context?.previousLists) {
-        for (const [key, data] of context.previousLists) {
-          queryClient.setQueryData(key, data);
-        }
+    onError: (_error, _jobId, context) => {
+      if (context?.snapshots) {
+        restoreJobFlagCaches(queryClient, context.snapshots);
       }
-      if (context?.previousDetail !== undefined) {
-        queryClient.setQueryData(queryKeys.job(jobId), context.previousDetail);
-      }
-      if (context?.previousSaved !== undefined) {
-        queryClient.setQueryData(queryKeys.saved(), context.previousSaved);
+      if (context?.savedSnapshots) {
+        restoreSavedListCaches(queryClient, context.savedSnapshots);
       }
       toast.error('Could not unsave job');
     },

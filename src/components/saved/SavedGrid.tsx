@@ -45,7 +45,10 @@ export function SavedGrid({ items }: SavedGridProps) {
                 variant="outline"
                 size="sm"
                 onClick={() => unsaveMutation.mutate(saved.job.id)}
-                disabled={unsaveMutation.isPending}
+                disabled={
+                  unsaveMutation.isPending &&
+                  unsaveMutation.variables === saved.job.id
+                }
               >
                 Remove
               </Button>

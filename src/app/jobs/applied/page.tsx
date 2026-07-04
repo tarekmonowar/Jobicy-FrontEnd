@@ -60,7 +60,9 @@ function AppliedContent() {
               variant="ghost"
               size="sm"
               onClick={() => unapplyMutation.mutate(job.id)}
-              disabled={unapplyMutation.isPending}
+              disabled={
+                unapplyMutation.isPending && unapplyMutation.variables === job.id
+              }
             >
               Remove
             </Button>

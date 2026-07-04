@@ -30,7 +30,10 @@ export function SaveButton({ jobId, isSaved, className }: SaveButtonProps) {
     e.preventDefault();
     e.stopPropagation();
 
-    if (status !== 'authed') {
+    // Wait for silent refresh — do not treat bootstrap as logged out.
+    if (status === 'idle') return;
+
+    if (status === 'guest') {
       toast.error('Sign in to save jobs');
       router.push(`/login?next=${encodeURIComponent(window.location.pathname)}`);
       return;
@@ -50,7 +53,7 @@ export function SaveButton({ jobId, isSaved, className }: SaveButtonProps) {
       size="icon"
       className={cn('size-8 shrink-0', className)}
       onClick={handleClick}
-      disabled={pending}
+      disabled={pending || status === 'idle'}
       aria-label={isSaved ? 'Unsave job' : 'Save job'}
     >
       <Heart
