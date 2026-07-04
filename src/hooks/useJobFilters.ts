@@ -141,12 +141,18 @@ export function useJobFilters() {
     [filters, pushBoard],
   );
 
-  // Selecting a job keeps the current filters/page — only the open job changes.
+  // Selecting a job updates the URL without a Next.js navigation — query-only
+  // router.replace often fails to refresh useSearchParams, which breaks split-pane
+  // selection. history.replaceState keeps the URL shareable without re-suspending.
   const setSelected = useCallback(
     (id: string | null) => {
-      pushBoard(filters, page, id);
+      const qs = stringifyBoard(filters, page, id);
+      const path = qs ? `/jobs?${qs}` : '/jobs';
+      if (typeof window !== 'undefined') {
+        window.history.replaceState(window.history.state, '', path);
+      }
     },
-    [filters, page, pushBoard],
+    [filters, page],
   );
 
   const reset = useCallback(() => {

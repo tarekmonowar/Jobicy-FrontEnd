@@ -14,7 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Button } from '@/components/ui/button';
-import { cn, formatRelativeTime } from '@/lib/utils';
+import { cn, formatJobListedTime } from '@/lib/utils';
 
 type JobDetailPanelProps = {
   jobId: string | null;
@@ -134,7 +134,7 @@ export function JobDetailPanel({ jobId, onBack, className }: JobDetailPanelProps
         <SimilarJobs jobId={job.id} limit={3} />
 
         <p className="text-xs text-muted-foreground">
-          Posted {formatRelativeTime(job.postedAt)} · {job.viewCount} views
+          Listed {formatJobListedTime(job)} · {job.viewCount} views
         </p>
       </div>
     </div>

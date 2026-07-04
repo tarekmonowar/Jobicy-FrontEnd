@@ -31,6 +31,8 @@ export function useJobsPage(filters: JobFilters, page: number, limit = 30) {
     queryKey: queryKeys.jobs({ ...filters, page, limit }),
     queryFn: () => jobsApi.getJobs({ ...filters, page, limit }),
     placeholderData: keepPreviousData,
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
 }
 

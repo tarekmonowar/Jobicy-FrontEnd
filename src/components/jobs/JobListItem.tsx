@@ -4,7 +4,7 @@
 // Clicking selects the job (detail opens in the right pane).
 
 import { Clock, MapPin } from 'lucide-react';
-import { cn, formatRelativeTime, isJobInactive } from '@/lib/utils';
+import { cn, formatJobListedTime, isJobInactive } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { SourceBadge } from '@/components/jobs/SourceBadge';
 import { SalaryDisplay } from '@/components/jobs/SalaryDisplay';
@@ -96,7 +96,7 @@ export function JobListItem({ job, selected, onSelect }: JobListItemProps) {
           <SourceBadge source={job.source} sourceName={job.sourceName} prominent />
           <span className="inline-flex items-center gap-1">
             <Clock className="size-3 shrink-0" aria-hidden />
-            {formatRelativeTime(job.postedAt)}
+            {formatJobListedTime(job)}
           </span>
           {inactive && <span className="text-muted-foreground/80">· Inactive</span>}
         </div>

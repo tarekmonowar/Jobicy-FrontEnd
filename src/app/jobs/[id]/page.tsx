@@ -14,7 +14,7 @@ import { SkillTags } from '@/components/jobs/SkillTags';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Button } from '@/components/ui/button';
-import { formatRelativeTime } from '@/lib/utils';
+import { formatJobListedTime } from '@/lib/utils';
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -100,7 +100,7 @@ export default function JobDetailPage({ params }: PageProps) {
       <SimilarJobs jobId={job.id} limit={3} />
 
       <p className="text-xs text-muted-foreground">
-        Posted {formatRelativeTime(job.postedAt)} · {job.viewCount} views
+        Listed {formatJobListedTime(job)} · {job.viewCount} views
       </p>
     </div>
   );

@@ -72,6 +72,8 @@ export type JobCardDto = {
   sourceName: string | null;
   sourceUrl: string;
   postedAt: string;
+  /** Last time ingestion confirmed this job is still active. */
+  lastSeenAt: string;
   isActive: boolean;
   applicationDeadline: string | null;
   viewCount: number;

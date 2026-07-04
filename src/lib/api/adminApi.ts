@@ -20,6 +20,8 @@ export type FetchLogDto = {
   jobsFetched: number;
   jobsNew: number;
   jobsDuplicate: number;
+  /** Filtered out (non-dev role, geo policy) — not stored in DB. */
+  jobsSkipped: number;
   errors: string[];
   startedAt: string;
   finishedAt: string | null;

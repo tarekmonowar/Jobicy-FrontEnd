@@ -2,16 +2,13 @@
 
 // Landing hero — live job counter (socket) + CTAs.
 
-import { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useOverview } from '@/hooks/useAnalytics';
-import { useSocketEvent } from '@/hooks/useSocketEvent';
 import { env } from '@/config/runtime';
-import type { StatsUpdatePayload } from '@/types/socket';
 
 /** Brief scale pulse when the live count changes. */
 function AnimatedCounter({ value }: { value: number }) {
@@ -28,19 +25,13 @@ function AnimatedCounter({ value }: { value: number }) {
 }
 
 /**
- * Hero section with a live active-jobs counter seeded from analytics,
- * updated in real time via `stats:update` socket events.
+ * Hero section with a live active-jobs counter from analytics overview.
+ * `stats:update` patches the overview cache in Providers — single source of truth.
  */
 export function Hero() {
   const { data: overview, isLoading } = useOverview();
-  const [socketCount, setSocketCount] = useState<number | undefined>();
-
-  useSocketEvent('stats:update', (payload: StatsUpdatePayload) => {
-    setSocketCount(payload.totalActiveJobs);
-  });
-
-  const count = socketCount ?? overview?.totalActiveJobs ?? 0;
-  const waitingForCount = isLoading && overview === undefined && socketCount === undefined;
+  const count = overview?.totalActiveJobs ?? 0;
+  const waitingForCount = isLoading && overview === undefined;
 
   return (
     <section className="relative overflow-hidden px-4 py-20 sm:py-28">

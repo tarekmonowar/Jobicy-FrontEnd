@@ -3,10 +3,12 @@
 // Jobs board — LinkedIn-style split view: selectable list (left) + detail (right).
 // Filters live in a slide-over drawer; selection and page are stored in the URL.
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useCallback, useState } from 'react';
 import { SlidersHorizontal } from 'lucide-react';
 import { useJobFilters } from '@/hooks/useJobFilters';
+import { useOverview } from '@/hooks/useAnalytics';
 import { useJobsPage } from '@/hooks/useJobs';
+import { useSocketEvent } from '@/hooks/useSocketEvent';
 import { FilterDrawer } from '@/components/jobs/FilterDrawer';
 import { PostedDropdown } from '@/components/jobs/PostedDropdown';
 import { SortDropdown } from '@/components/jobs/SortDropdown';
@@ -38,25 +40,89 @@ function countActiveFilters(filters: JobFilters): number {
 }
 
 function JobsBoardContent() {
-  const { filters, page, selected, setFilter, setPage, setSelected, reset } = useJobFilters();
+  const {
+    filters,
+    page,
+    selected: selectedFromUrl,
+    setFilter,
+    setPage,
+    setSelected,
+    reset,
+  } = useJobFilters();
   const query = useJobsPage(filters, page, PAGE_SIZE);
+  const { data: overview } = useOverview();
   const [filtersOpen, setFiltersOpen] = useState(false);
+  // Local selection updates instantly; URL syncs via history.replaceState for shareable links.
+  const [selectedId, setSelectedId] = useState<string | null>(selectedFromUrl);
 
   const jobs = query.data?.data ?? [];
   const meta = query.data?.meta;
   const activeCount = countActiveFilters(filters);
   const sort = filters.sort ?? 'latest';
 
-  // On desktop, auto-open the first result so the detail pane is never empty.
-  useEffect(() => {
-    if (selected || jobs.length === 0) return;
-    if (typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches) {
-      setSelected(jobs[0].id);
-    }
-  }, [jobs, selected, setSelected]);
+  const handleSelect = useCallback(
+    (id: string | null) => {
+      setSelectedId(id);
+      setSelected(id);
+    },
+    [setSelected],
+  );
+
+  const handleSetFilter = useCallback(
+    (partial: Partial<JobFilters>) => {
+      setSelectedId(null);
+      setFilter(partial);
+    },
+    [setFilter],
+  );
+
+  const handleSetPage = useCallback(
+    (nextPage: number) => {
+      setSelectedId(null);
+      setPage(nextPage);
+    },
+    [setPage],
+  );
+
+  const handleReset = useCallback(() => {
+    setSelectedId(null);
+    reset();
+  }, [reset]);
+
+  // Prefer local selection; fall back to URL; on desktop auto-open the first row.
+  const isDesktop =
+    typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches;
+  const activeSelectedId =
+    selectedId ?? selectedFromUrl ?? (isDesktop && jobs[0] ? jobs[0].id : null);
+
+  // Refetch the board immediately when ingestion finishes (socket events).
+  useSocketEvent('job:new', () => {
+    void query.refetch();
+  });
+  useSocketEvent('stats:update', () => {
+    void query.refetch();
+  });
+
+  const countLabel =
+    meta &&
+    (activeCount > 0
+      ? overview?.totalActiveJobs != null
+        ? `${meta.total.toLocaleString()} of ${overview.totalActiveJobs.toLocaleString()} jobs (filtered)`
+        : `${meta.total.toLocaleString()} matching jobs (filtered)`
+      : `${meta.total.toLocaleString()} active developer jobs`);
 
   return (
     <div className="mx-auto flex h-[calc(100dvh-3.5rem)] w-full max-w-[1600px] flex-col px-3 sm:px-5">
+      {activeCount > 0 && (
+        <div className="flex shrink-0 items-center justify-between gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm">
+          <span className="text-muted-foreground">
+            Filters are narrowing results — home page shows all active developer jobs.
+          </span>
+          <Button type="button" variant="ghost" size="sm" onClick={handleReset}>
+            Clear filters
+          </Button>
+        </div>
+      )}
       {/* Toolbar: filters button + result count + posted/sort controls */}
       <div className="flex shrink-0 flex-wrap items-center gap-2 py-3">
         <Button
@@ -76,15 +142,15 @@ function JobsBoardContent() {
         </Button>
 
         <span className="hidden text-sm text-muted-foreground sm:inline">
-          {meta ? `${meta.total.toLocaleString()} developer jobs` : 'Loading…'}
+          {countLabel ?? 'Loading…'}
         </span>
 
         <div className="ml-auto flex items-center gap-2">
           <PostedDropdown
             value={filters.datePosted}
-            onChange={(datePosted) => setFilter({ datePosted })}
+            onChange={(datePosted) => handleSetFilter({ datePosted })}
           />
-          <SortDropdown value={sort} onChange={(s) => setFilter({ sort: s })} />
+          <SortDropdown value={sort} onChange={(s) => handleSetFilter({ sort: s })} />
         </div>
       </div>
 
@@ -92,22 +158,27 @@ function JobsBoardContent() {
       <div className="flex min-h-0 flex-1 gap-4 pb-3">
         <JobList
           query={query}
-          selectedId={selected}
-          onSelect={setSelected}
+          selectedId={activeSelectedId}
+          onSelect={(id) => handleSelect(id)}
           page={page}
-          onPageChange={setPage}
-          onResetFilters={reset}
+          onPageChange={handleSetPage}
+          onResetFilters={handleReset}
           className="w-full lg:w-[400px] lg:shrink-0 xl:w-[440px]"
         />
-        <JobDetailPanel jobId={selected} className="hidden flex-1 lg:flex" />
+        <JobDetailPanel
+          key={activeSelectedId ?? 'none'}
+          jobId={activeSelectedId}
+          className="hidden flex-1 lg:flex"
+        />
       </div>
 
       {/* Mobile/tablet: detail opens as a full-screen overlay below the navbar */}
-      {selected && (
+      {activeSelectedId && (
         <div className="fixed inset-x-0 bottom-0 top-14 z-40 bg-background lg:hidden">
           <JobDetailPanel
-            jobId={selected}
-            onBack={() => setSelected(null)}
+            key={activeSelectedId}
+            jobId={activeSelectedId}
+            onBack={() => handleSelect(null)}
             className="h-full rounded-none border-0"
           />
         </div>
@@ -117,8 +188,8 @@ function JobsBoardContent() {
         open={filtersOpen}
         onClose={() => setFiltersOpen(false)}
         filters={filters}
-        onChange={setFilter}
-        onReset={reset}
+        onChange={handleSetFilter}
+        onReset={handleReset}
       />
     </div>
   );

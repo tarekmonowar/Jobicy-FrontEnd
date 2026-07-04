@@ -16,7 +16,8 @@ export function useOverview() {
   return useQuery({
     queryKey: queryKeys.analytics.overview(),
     queryFn: () => analyticsApi.getOverview(),
-    staleTime: STALE_MS,
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
 }
 

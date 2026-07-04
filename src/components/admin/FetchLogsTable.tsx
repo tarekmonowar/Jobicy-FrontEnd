@@ -69,10 +69,18 @@ export function FetchLogsTable() {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0">
-        <CardTitle className="text-lg">Ingestion fetch logs</CardTitle>
-        <p className="text-sm text-muted-foreground">
-          Page {meta.page} of {meta.totalPages || 1}
+      <CardHeader className="space-y-2">
+        <div className="flex flex-row items-center justify-between space-y-0">
+          <CardTitle className="text-lg">Ingestion fetch logs</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Page {meta.page} of {meta.totalPages || 1}
+          </p>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Fetched = raw API rows per source. Only New rows are inserted; Dupes match an
+          existing job (same title+company across providers). Skipped = filtered (non-developer
+          role or onsite outside Bangladesh). The DB stores unique jobs — not the sum of
+          Fetched.
         </p>
       </CardHeader>
       <CardContent>
@@ -91,6 +99,7 @@ export function FetchLogsTable() {
                   <th className="pb-3 pr-4 font-medium">Fetched</th>
                   <th className="pb-3 pr-4 font-medium">New</th>
                   <th className="pb-3 pr-4 font-medium">Dupes</th>
+                  <th className="pb-3 pr-4 font-medium">Skipped</th>
                   <th className="pb-3 pr-4 font-medium">Duration</th>
                   <th className="pb-3 font-medium">Started</th>
                 </tr>
@@ -107,6 +116,9 @@ export function FetchLogsTable() {
                     <td className="py-3 pr-4 tabular-nums">{log.jobsFetched}</td>
                     <td className="py-3 pr-4 tabular-nums">{log.jobsNew}</td>
                     <td className="py-3 pr-4 tabular-nums">{log.jobsDuplicate}</td>
+                    <td className="py-3 pr-4 tabular-nums text-muted-foreground">
+                      {log.jobsSkipped}
+                    </td>
                     <td className="py-3 pr-4 tabular-nums">{formatDuration(log.durationMs)}</td>
                     <td className="py-3 text-muted-foreground">
                       {formatRelativeTime(log.startedAt)}

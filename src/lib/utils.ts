@@ -33,6 +33,20 @@ export function formatRelativeTime(iso: string): string {
 }
 
 /**
+ * Relative time for job cards — uses lastSeenAt (updated every ingestion run)
+ * so re-fetched jobs show as fresh immediately after a fetch.
+ */
+export function formatJobListedTime(job: {
+  postedAt: string;
+  lastSeenAt?: string;
+}): string {
+  if (job.lastSeenAt) {
+    return formatRelativeTime(job.lastSeenAt);
+  }
+  return formatRelativeTime(job.postedAt);
+}
+
+/**
  * Format salary for job cards — range, "Negotiable", or "Not specified".
  * Honors the active display currency via optional override.
  */

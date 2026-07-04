@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Briefcase, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { formatRelativeTime } from '@/lib/utils';
+import { formatJobListedTime } from '@/lib/utils';
 import { SourceBadge } from '@/components/jobs/SourceBadge';
 import { StatusBadge } from '@/components/jobs/StatusBadge';
 import { SalaryDisplay } from '@/components/jobs/SalaryDisplay';
@@ -169,7 +169,7 @@ export function JobCard({ job, badge }: JobCardProps) {
             </span>
             <span className="inline-flex items-center gap-1">
               <Clock className="size-3.5 shrink-0" aria-hidden />
-              {formatRelativeTime(job.postedAt)}
+              {formatJobListedTime(job)}
             </span>
           </div>
         </CardContent>

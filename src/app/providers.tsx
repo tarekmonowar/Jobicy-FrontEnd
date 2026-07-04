@@ -32,6 +32,12 @@ export function Providers({ children }: ProvidersProps) {
     }
 
     // Patch the cached overview when live stats arrive from ingestion.
+    const invalidateJobQueries = () => {
+      void queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.trending() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.analytics.overview() });
+    };
+
     const onStatsUpdate = (payload: StatsUpdatePayload) => {
       queryClient.setQueryData<OverviewDto>(queryKeys.analytics.overview(), (prev) =>
         prev
@@ -40,15 +46,29 @@ export function Providers({ children }: ProvidersProps) {
               totalActiveJobs: payload.totalActiveJobs,
               newJobsToday: payload.newJobsToday,
             }
-          : prev,
+          : {
+              totalActiveJobs: payload.totalActiveJobs,
+              newJobsToday: payload.newJobsToday,
+              companiesHiringThisMonth: 0,
+              averageSalaryBdt: 0,
+              demandIndex: 0,
+              demandTrend: 0,
+            },
       );
+      invalidateJobQueries();
+    };
+
+    const onJobNew = () => {
+      invalidateJobQueries();
     };
 
     const socket = getSocket();
     socket.on('stats:update', onStatsUpdate);
+    socket.on('job:new', onJobNew);
 
     return () => {
       socket.off('stats:update', onStatsUpdate);
+      socket.off('job:new', onJobNew);
       disconnectSocket();
     };
   }, [bootstrap]);
